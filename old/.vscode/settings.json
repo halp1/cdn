@@ -1,0 +1,10 @@
+{
+	"github.copilot.chat.codeGeneration.instructions": [
+		{
+			"file": "svelte-instructions.txt"
+		},
+		{
+			"text": "Follow all documentation in the svelte instructions file EXACTLY. Do not deviate from the correct syntax provided."
+		}
+	]
+}
