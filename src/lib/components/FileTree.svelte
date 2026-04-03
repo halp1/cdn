@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-svelte';
+	import { ChevronRight, ChevronDown, Folder, FolderOpen } from '@lucide/svelte';
 	import FileIcon from './FileIcon.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 

@@ -8,7 +8,7 @@
 		Ellipsis,
 		ArrowUpDown,
 		Eye
-	} from 'lucide-svelte';
+	} from '@lucide/svelte';
 	import FileIcon from './FileIcon.svelte';
 	import { formatFileSize } from '$lib/utils';
 	import type { R2Object } from '$lib/r2-server';
@@ -122,7 +122,7 @@
 		if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
 		else {
 			sortKey = key;
-			sortDir = 'asc';
+			sortDir = key === 'size' || key === 'date' ? 'desc' : 'asc';
 		}
 	};
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { goto } from '$app/navigation';
-	import { FolderPlus, Upload, Trash2 } from 'lucide-svelte';
+	import { FolderPlus, Upload, Trash2 } from '@lucide/svelte';
 	import Header from '$lib/components/Header.svelte';
 	import FileTree from '$lib/components/FileTree.svelte';
 	import FileList from '$lib/components/FileList.svelte';
@@ -9,6 +9,8 @@
 	import RightPanel from '$lib/components/RightPanel.svelte';
 	import NewFolderModal from '$lib/components/NewFolderModal.svelte';
 	import DeleteModal from '$lib/components/DeleteModal.svelte';
+	import KeyboardManager from '$lib/components/KeyboardManager.svelte';
+	import FileSearchModal from '$lib/components/FileSearchModal.svelte';
 	import {
 		listObjectsQuery,
 		listAllObjectsQuery,
@@ -28,9 +30,10 @@
 	}
 	let { path, username, r2Url }: Props = $props();
 
-	let searchQuery = $state('');
 	let selected = $state<Set<string>>(new Set());
 	let previewObj = $state<R2Object | null>(null);
+	let isSearchModalOpen = $state(false);
+	let searchModalQuery = $state('');
 
 	type RightPanelMode = 'upload-links' | 'api-keys' | 'stats' | 'preview' | null;
 	let rightPanel = $state<RightPanelMode>(null);
@@ -62,6 +65,14 @@
 
 	$effect(() => {
 		void refreshAllObjects();
+	});
+
+	// Auto-expand FileTree ancestors when file is selected from search
+	$effect(() => {
+		if (selected.size > 0) {
+			// This effect runs whenever selected changes
+			// FileTree watches currentPath and will auto-expand accordingly
+		}
 	});
 
 	let uploadInput = $state<HTMLInputElement | null>(null);
@@ -163,8 +174,24 @@
 		await Promise.all([refreshFiles(), refreshAllObjects()]);
 	};
 
-	const handleSearch = (q: string) => {
-		searchQuery = q;
+	const handleFileSelect = (file: { key: string; isFolder: boolean }) => {
+		// Extract parent folder path
+		const lastSlashIndex = file.key.lastIndexOf('/');
+		const parentPath = lastSlashIndex > 0 ? file.key.slice(0, lastSlashIndex) + '/' : '';
+
+		// Navigate to parent folder
+		navigate(parentPath);
+
+		// Select the file - use setTimeout to ensure navigation completes first
+		setTimeout(() => {
+			handleSelect([file.key], true);
+
+			// Open preview if it's not a folder
+			if (!file.isFolder && filesData?.objects) {
+				const obj = filesData.objects.find((o) => o.key === file.key);
+				if (obj) handlePreview(obj as R2Object);
+			}
+		}, 0);
 	};
 
 	const selectedCount = $derived(selected.size);
@@ -181,10 +208,22 @@
 
 <svelte:window bind:innerWidth={windowWidth} />
 
-<div class="relative z-1 flex h-screen flex-col overflow-hidden bg-(--bg)">
+<KeyboardManager
+	isModalOpen={isSearchModalOpen}
+	onToggleModal={(open) => {
+		isSearchModalOpen = open;
+		if (!open) {
+			searchModalQuery = '';
+		}
+	}}
+/>
+
+<div class="relative z-1 flex h-screen flex-col overflow-hidden bg-bg">
 	<Header
 		{username}
-		onSearch={handleSearch}
+		onOpenSearchModal={() => {
+			isSearchModalOpen = true;
+		}}
 		onUpload={handleUpload}
 		rightPanel={rightPanel ?? ''}
 		onTogglePanel={handleTogglePanel}
@@ -192,7 +231,7 @@
 
 	<div class="flex min-h-0 flex-1 overflow-hidden">
 		{#if allObjectsData === null}
-			<div class="w-55 shrink-0 border-r border-border bg-(--surface)"></div>
+			<div class="w-55 shrink-0 border-r border-border bg-surface"></div>
 		{:else}
 			<FileTree
 				objects={allObjectsData.objects}
@@ -210,21 +249,35 @@
 			<div
 				class="relative flex h-9 shrink-0 items-center justify-between gap-2 border-b border-border px-3"
 			>
-				<nav class="flex h-full min-w-0 flex-1 items-center bg-bg text-sm" aria-label="Breadcrumb">
+				<nav
+					class="z-10 flex h-full min-w-0 flex-1 items-stretch bg-bg text-sm"
+					aria-label="Breadcrumb"
+				>
 					{#if breadcrumbs.length === 0}
 						<span class="text-text">root</span>
 					{:else}
-						<a href="/" class="px-0.5 text-muted transition-colors hover:text-text">root</a>
+						<a
+							href="/"
+							class="flex items-center justify-center bg-bg px-0.5 text-muted transition-colors hover:text-text"
+							><span>root</span></a
+						>
 						{#each breadcrumbs as crumb, i (crumb.href)}
-							<span class="px-1 text-border select-none">/</span>
+							<div class="flex items-center justify-center bg-bg px-1 text-border select-none">
+								<span>/</span>
+							</div>
 							{#if i === breadcrumbs.length - 1}
-								<span class="px-0.5 whitespace-nowrap text-text">{crumb.label}</span>
+								<div
+									class="flex items-center justify-center bg-bg px-0.5 pr-3 whitespace-nowrap text-text"
+								>
+									<span>{crumb.label}</span>
+								</div>
 							{:else}
 								<a
 									href={crumb.href}
-									class="px-0.5 whitespace-nowrap text-muted transition-colors hover:text-text"
-									>{crumb.label}</a
+									class="flex items-center justify-center bg-bg px-0.5 whitespace-nowrap text-muted transition-colors hover:text-text"
 								>
+									<span>{crumb.label}</span>
+								</a>
 							{/if}
 						{/each}
 					{/if}
@@ -241,7 +294,7 @@
 						</button>
 					{/if}
 					<button
-						class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-(--muted) uppercase transition-[color,border-color,background] hover:border-(--muted) hover:bg-white/3 hover:text-(--text)"
+						class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-muted uppercase transition-[color,border-color,background] hover:border-muted hover:bg-white/3 hover:text-text"
 						onclick={handleNewFolder}
 						title="New folder"
 					>
@@ -249,7 +302,7 @@
 						<span>New folder</span>
 					</button>
 					<button
-						class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-(--muted) uppercase transition-[color,border-color,background] hover:border-(--muted) hover:bg-white/3 hover:text-(--text)"
+						class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-muted uppercase transition-[color,border-color,background] hover:border-muted hover:bg-white/3 hover:text-text"
 						onclick={handleUpload}
 						title="Upload"
 					>
@@ -261,7 +314,7 @@
 
 			{#if filesData === null}
 				<div
-					class="flex h-50 items-center justify-center text-sm tracking-widest text-(--muted) uppercase"
+					class="flex h-50 items-center justify-center text-sm tracking-widest text-muted uppercase"
 				>
 					Loading…
 				</div>
@@ -277,7 +330,7 @@
 					onPreview={handlePreview}
 					onNewFolder={handleNewFolder}
 					onUpload={handleUpload}
-					{searchQuery}
+					searchQuery=""
 				/>
 			{/if}
 		</main>
@@ -295,12 +348,12 @@
 			/>
 		{:else if rightPanel === 'preview'}
 			<aside
-				class="relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-(--surface)"
+				class="relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-surface"
 				style="width: {rightWidth}px"
 			>
 				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 				<div
-					class="absolute top-0 left-0 z-2 h-full w-1 cursor-col-resize hover:bg-(--accent) hover:opacity-50"
+					class="absolute top-0 left-0 z-2 h-full w-1 cursor-col-resize hover:bg-accent hover:opacity-50"
 					onmousedown={(e) => {
 						let sx = e.clientX,
 							sw = rightWidth;
@@ -333,10 +386,8 @@
 		{/if}
 	</div>
 
-	<div
-		class="flex h-6 shrink-0 items-center justify-end border-t border-border bg-(--surface) px-3"
-	>
-		<div class="text-xs tracking-[0.08em] text-(--muted)">
+	<div class="flex h-6 shrink-0 items-center justify-end border-t border-border bg-surface px-3">
+		<div class="text-xs tracking-[0.08em] text-muted">
 			<span>{selectedCount} selected</span>
 		</div>
 	</div>
@@ -365,6 +416,20 @@
 		onConfirm={confirmDelete}
 		onCancel={() => {
 			deleteModalKeys = null;
+		}}
+	/>
+{/if}
+
+{#if allObjectsData !== null}
+	<FileSearchModal
+		isOpen={isSearchModalOpen}
+		allObjects={allObjectsData.objects}
+		searchQuery={searchModalQuery}
+		onQueryChange={(q) => (searchModalQuery = q)}
+		onFileSelect={handleFileSelect}
+		onClose={() => {
+			isSearchModalOpen = false;
+			searchModalQuery = '';
 		}}
 	/>
 {/if}
