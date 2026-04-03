@@ -20,11 +20,11 @@
 </script>
 
 <header
-	class="relative z-10 flex h-10 shrink-0 items-center gap-0 border-b border-(--border) bg-(--surface) px-3"
+	class="relative z-10 flex h-10 shrink-0 items-center gap-0 border-b border-border bg-(--surface) px-3"
 >
 	<div class="flex min-w-0 flex-1 items-center">
 		<span
-			class="shrink-0 [font-family:var(--font-heading)] text-[14px] tracking-[0.08em] text-(--accent)"
+			class="shrink-0 [font-family:var(--font-heading)] text-lg tracking-[0.08em] text-(--accent)"
 			>HALP/CDN</span
 		>
 	</div>
@@ -36,7 +36,7 @@
 		/>
 		<input
 			type="search"
-			class="search-input w-55 rounded-none border border-(--border) bg-(--bg) py-1.25 pr-2.5 pl-7.5 font-mono text-[12px] text-(--text) transition-[border-color,width] duration-200 outline-none placeholder:text-[#333] focus:w-70 focus:border-(--accent)"
+			class="search-input w-55 rounded-none border border-border bg-(--bg) py-1.25 pr-2.5 pl-7.5 font-mono text-sm text-(--text) transition-[border-color,width] duration-200 outline-none placeholder:text-[#333] focus:w-70 focus:border-(--accent)"
 			placeholder="Search files..."
 			bind:value={searchValue}
 		/>
@@ -50,7 +50,7 @@
 		>
 			<Upload size={14} />
 		</button>
-		<div class="mx-1 h-5 w-px bg-(--border)"></div>
+		<div class="mx-1 h-5 w-px bg-border"></div>
 		<button
 			class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 transition-colors hover:bg-white/4 hover:text-(--text) {rightPanel ===
 			'upload-links'
@@ -81,7 +81,7 @@
 		>
 			<BarChart2 size={14} />
 		</button>
-		<div class="mx-1 h-5 w-px bg-(--border)"></div>
+		<div class="mx-1 h-5 w-px bg-border"></div>
 		<button
 			class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 text-(--muted) transition-colors hover:bg-white/4 hover:text-[#f0a830]"
 			title="Deploy"

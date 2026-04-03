@@ -128,7 +128,7 @@
 
 	let dragOver = $state(false);
 	const dragOverClasses =
-		"after:pointer-events-none after:absolute after:inset-0 after:z-[5] after:flex after:items-center after:justify-center after:border-2 after:border-dashed after:border-accent after:bg-accent/[0.06] after:text-[13px] after:text-accent after:tracking-[0.1em] after:uppercase after:content-['Drop_to_upload']";
+		"after:pointer-events-none after:absolute after:inset-0 after:z-[5] after:flex after:items-center after:justify-center after:border-2 after:border-dashed after:border-accent after:bg-accent/[0.06] after:text-base after:text-accent after:tracking-[0.1em] after:uppercase after:content-['Drop_to_upload']";
 
 	const formatDate = (d: Date | undefined): string => {
 		if (!d) return '—';
@@ -160,21 +160,21 @@
 	>
 		<div class="flex items-center px-1.5"></div>
 		<button
-			class="flex cursor-pointer items-center justify-start border-0 bg-transparent px-1.5 text-left font-mono text-[9px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
+			class="flex cursor-pointer items-center justify-start border-0 bg-transparent px-1.5 text-left font-mono text-xs tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
 			onclick={() => cycleSort('name')}
 		>
 			Name
 			{#if sortKey === 'name'}<ArrowUpDown size={10} class="ml-1 opacity-60" />{/if}
 		</button>
 		<button
-			class="flex cursor-pointer items-center justify-end border-0 bg-transparent px-1.5 font-mono text-[9px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
+			class="flex cursor-pointer items-center justify-end border-0 bg-transparent px-1.5 font-mono text-xs tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
 			onclick={() => cycleSort('size')}
 		>
 			Size
 			{#if sortKey === 'size'}<ArrowUpDown size={10} class="ml-1 opacity-60" />{/if}
 		</button>
 		<button
-			class="flex cursor-pointer items-center justify-end border-0 bg-transparent px-1.5 font-mono text-[9px] tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
+			class="flex cursor-pointer items-center justify-end border-0 bg-transparent px-1.5 font-mono text-xs tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
 			onclick={() => cycleSort('modified')}
 		>
 			Modified
@@ -188,7 +188,7 @@
 	>
 		{#if sorted().length === 0}
 			<div
-				class="flex h-50 flex-col items-center justify-center gap-3 text-[11px] tracking-widest text-border uppercase"
+				class="flex h-50 flex-col items-center justify-center gap-3 text-sm tracking-widest text-border uppercase"
 			>
 				<Upload size={24} />
 				<span>Drop files here or click Upload</span>
@@ -221,15 +221,15 @@
 					</div>
 					<div class="flex min-w-0 items-center px-1.5">
 						<span
-							class="overflow-hidden text-[12px] text-ellipsis whitespace-nowrap {isSelected
+							class="overflow-hidden text-sm text-ellipsis whitespace-nowrap {isSelected
 								? 'text-accent'
 								: 'text-text'}">{getLabel(obj)}</span
 						>
 					</div>
-					<div class="flex items-center justify-end px-1.5 font-mono text-[11px] text-muted">
+					<div class="flex items-center justify-end px-1.5 font-mono text-sm text-muted">
 						{obj.isFolder ? '—' : formatFileSize(obj.size ?? 0)}
 					</div>
-					<div class="flex items-center justify-end px-1.5 font-mono text-[11px] text-muted">
+					<div class="flex items-center justify-end px-1.5 font-mono text-sm text-muted">
 						{obj.isFolder ? '—' : formatDate(obj.lastModified)}
 					</div>
 					<div class="flex items-center justify-center">
@@ -259,7 +259,7 @@
 		{#if obj}
 			{#if !obj.isFolder}
 				<button
-					class="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-1.75 text-left font-mono text-[11px] text-muted transition-[color,background] hover:bg-white/4 hover:text-text"
+					class="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-1.75 text-left font-mono text-sm text-muted transition-[color,background] hover:bg-white/4 hover:text-text"
 					onclick={() => {
 						onPreview(obj);
 						closeContext();
@@ -268,7 +268,7 @@
 					<Eye size={12} /> Preview
 				</button>
 				<button
-					class="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-1.75 text-left font-mono text-[11px] text-muted transition-[color,background] hover:bg-white/4 hover:text-text"
+					class="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-1.75 text-left font-mono text-sm text-muted transition-[color,background] hover:bg-white/4 hover:text-text"
 					onclick={() => {
 						navigator.clipboard.writeText(window.location.origin + '/obj/' + obj.key);
 						closeContext();
@@ -278,7 +278,7 @@
 				</button>
 			{/if}
 			<button
-				class="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-1.75 text-left font-mono text-[11px] text-muted transition-[color,background] hover:bg-white/4 hover:text-text"
+				class="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-1.75 text-left font-mono text-sm text-muted transition-[color,background] hover:bg-white/4 hover:text-text"
 				onclick={() => {
 					onMove(obj.key);
 					closeContext();
@@ -288,7 +288,7 @@
 			</button>
 			<div class="mx-0 my-1 h-px bg-border"></div>
 			<button
-				class="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-1.75 text-left font-mono text-[11px] text-muted transition-[color,background] hover:bg-white/4 hover:text-[#ff6b6b]"
+				class="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-1.75 text-left font-mono text-sm text-muted transition-[color,background] hover:bg-white/4 hover:text-[#ff6b6b]"
 				onclick={() => {
 					onDelete([obj.key]);
 					closeContext();

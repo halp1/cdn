@@ -129,8 +129,8 @@
 		tabindex="-1"
 	/>
 
-	<div class="flex h-8 shrink-0 items-center gap-2 border-b border-border px-3">
-		<span class="flex-1 text-[9px] tracking-[0.16em] text-muted uppercase">{titles[panel]}</span>
+	<div class="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
+		<span class="flex-1 text-xs tracking-[0.16em] text-muted uppercase">{titles[panel]}</span>
 		<button
 			class="flex cursor-pointer items-center border-0 bg-transparent p-1.25 text-muted transition-colors hover:text-text"
 			onclick={onClose}><X size={13} /></button
@@ -143,7 +143,7 @@
 		{#if panel === 'upload-links'}
 			<div class="flex flex-col gap-2">
 				<button
-					class="mb-1 flex w-full cursor-pointer items-center justify-center gap-1.5 border border-border bg-transparent px-2.5 py-1.5 font-mono text-[10px] tracking-[0.08em] text-muted uppercase transition-all hover:border-accent hover:text-accent"
+					class="mb-1 flex w-full cursor-pointer items-center justify-center gap-1.5 border border-border bg-transparent px-2.5 py-1.5 font-mono text-xs tracking-[0.08em] text-muted uppercase transition-all hover:border-accent hover:text-accent"
 					onclick={() => {
 						showNewLink = !showNewLink;
 					}}
@@ -157,11 +157,11 @@
 						class="flex animate-[fadeUp_0.15s_ease_both] flex-col gap-2.5 border border-border bg-bg p-3"
 					>
 						<div class="flex flex-col gap-1.5">
-							<label class="text-[9px] tracking-[0.14em] text-muted uppercase" for="link-path"
+							<label class="text-xs tracking-[0.14em] text-muted uppercase" for="link-path"
 								>Upload path</label
 							>
 							<input
-								class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-[11px] text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+								class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
 								id="link-path"
 								bind:value={newLinkPath}
 								placeholder="path/to/folder/"
@@ -169,11 +169,11 @@
 						</div>
 						<div class="grid grid-cols-2 gap-2">
 							<div class="flex flex-col gap-1.5">
-								<label class="text-[9px] tracking-[0.14em] text-muted uppercase" for="link-hours"
+								<label class="text-xs tracking-[0.14em] text-muted uppercase" for="link-hours"
 									>Expires (hours)</label
 								>
 								<input
-									class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-[11px] text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+									class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
 									id="link-hours"
 									type="number"
 									bind:value={newLinkHours}
@@ -182,11 +182,11 @@
 								/>
 							</div>
 							<div class="flex flex-col gap-1.5">
-								<label class="text-[9px] tracking-[0.14em] text-muted uppercase" for="link-max"
+								<label class="text-xs tracking-[0.14em] text-muted uppercase" for="link-max"
 									>Max uploads</label
 								>
 								<input
-									class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-[11px] text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+									class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
 									id="link-max"
 									type="number"
 									bind:value={newLinkMax}
@@ -197,13 +197,13 @@
 						</div>
 						<div class="flex justify-end gap-1.5">
 							<button
-								class="cursor-pointer border border-border bg-transparent px-3 py-1.5 font-mono text-[10px] tracking-widest text-muted uppercase transition-all hover:border-muted hover:text-text"
+								class="cursor-pointer border border-border bg-transparent px-3 py-1.5 font-mono text-xs tracking-widest text-muted uppercase transition-all hover:border-muted hover:text-text"
 								onclick={() => {
 									showNewLink = false;
 								}}>Cancel</button
 							>
 							<button
-								class="cursor-pointer border-0 bg-accent px-3 py-1.5 font-mono text-[10px] font-medium tracking-widest text-bg uppercase transition-opacity hover:opacity-[0.88] disabled:cursor-not-allowed disabled:opacity-40"
+								class="cursor-pointer border-0 bg-accent px-3 py-1.5 font-mono text-xs font-medium tracking-widest text-bg uppercase transition-opacity hover:opacity-[0.88] disabled:cursor-not-allowed disabled:opacity-40"
 								onclick={submitLink}
 								disabled={creatingLink || !newLinkPath}
 							>
@@ -220,16 +220,16 @@
 						<div
 							class="flex animate-[fadeUp_0.2s_ease_both] flex-col gap-1.5 border border-border bg-bg px-3 py-2.5"
 						>
-							<div class="overflow-hidden text-[12px] text-ellipsis whitespace-nowrap text-text">
+							<div class="overflow-hidden text-sm text-ellipsis whitespace-nowrap text-text">
 								{link.upload_path}
 							</div>
 							<div class="flex items-center gap-1">
 								<span
-									class="border border-border px-1.25 py-px text-[9px] tracking-widest text-muted uppercase"
+									class="border border-border px-1.25 py-px text-xs tracking-widest text-muted uppercase"
 									>{link.used_count}/{link.max_uploads} used</span
 								>
 								<span
-									class="border border-accent/30 px-1.25 py-px text-[9px] tracking-widest text-accent uppercase"
+									class="border border-accent/30 px-1.25 py-px text-xs tracking-widest text-accent uppercase"
 									>{formatExpiry(link.expires_at)}</span
 								>
 							</div>
@@ -251,14 +251,14 @@
 							</div>
 						</div>
 					{:else}
-						<p class="py-4 text-center text-[11px] text-border">No active upload links</p>
+						<p class="py-4 text-center text-sm text-border">No active upload links</p>
 					{/each}
 				{/await}
 			</div>
 		{:else if panel === 'api-keys'}
 			<div class="flex flex-col gap-2">
 				<button
-					class="mb-1 flex w-full cursor-pointer items-center justify-center gap-1.5 border border-border bg-transparent px-2.5 py-1.5 font-mono text-[10px] tracking-[0.08em] text-muted uppercase transition-all hover:border-accent hover:text-accent"
+					class="mb-1 flex w-full cursor-pointer items-center justify-center gap-1.5 border border-border bg-transparent px-2.5 py-1.5 font-mono text-xs tracking-[0.08em] text-muted uppercase transition-all hover:border-accent hover:text-accent"
 					onclick={() => {
 						showNewKey = !showNewKey;
 						newKeyValue = '';
@@ -272,12 +272,12 @@
 					<div
 						class="animate-[fadeUp_0.15s_ease_both] border border-accent/20 bg-accent/6 px-3 py-2.5"
 					>
-						<p class="mb-2 text-[10px] tracking-[0.06em] text-accent">
+						<p class="mb-2 text-xs tracking-[0.06em] text-accent">
 							Copy this key now — it won't be shown again.
 						</p>
 						<div class="flex items-center gap-1.5">
 							<code
-								class="flex-1 overflow-hidden font-mono text-[10px] text-ellipsis whitespace-nowrap text-accent"
+								class="flex-1 overflow-hidden font-mono text-xs text-ellipsis whitespace-nowrap text-accent"
 								>{newKeyValue}</code
 							>
 							<button
@@ -295,22 +295,22 @@
 						class="flex animate-[fadeUp_0.15s_ease_both] flex-col gap-2.5 border border-border bg-bg p-3"
 					>
 						<div class="flex flex-col gap-1.5">
-							<label class="text-[9px] tracking-[0.14em] text-muted uppercase" for="key-name"
+							<label class="text-xs tracking-[0.14em] text-muted uppercase" for="key-name"
 								>Key name</label
 							>
 							<input
-								class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-[11px] text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+								class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
 								id="key-name"
 								bind:value={newKeyName}
 								placeholder="my-integration"
 							/>
 						</div>
 						<div class="flex flex-col gap-1.5">
-							<p class="text-[9px] tracking-[0.14em] text-muted uppercase">Permissions</p>
+							<p class="text-xs tracking-[0.14em] text-muted uppercase">Permissions</p>
 							<div class="grid grid-cols-2 gap-1">
 								{#each ['read', 'write', 'delete', 'list'] as perm (perm)}
 									<label
-										class="flex cursor-pointer items-center gap-1.5 font-mono text-[11px] text-muted"
+										class="flex cursor-pointer items-center gap-1.5 font-mono text-sm text-muted"
 									>
 										<input
 											type="checkbox"
@@ -324,12 +324,12 @@
 							</div>
 						</div>
 						<div class="flex flex-col gap-1.5">
-							<p class="text-[9px] tracking-[0.14em] text-muted uppercase">Scoped paths</p>
+							<p class="text-xs tracking-[0.14em] text-muted uppercase">Scoped paths</p>
 							<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 							{#each newKeyPaths as _, i (i)}
 								<div class="mb-1 flex items-center gap-1">
 									<input
-										class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-[11px] text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+										class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
 										bind:value={newKeyPaths[i]}
 										placeholder="/folder"
 									/>
@@ -346,7 +346,7 @@
 								</div>
 							{/each}
 							<button
-								class="flex cursor-pointer items-center gap-1.25 border-0 bg-transparent px-0 py-1 font-mono text-[10px] text-muted transition-colors hover:text-text"
+								class="flex cursor-pointer items-center gap-1.25 border-0 bg-transparent px-0 py-1 font-mono text-xs text-muted transition-colors hover:text-text"
 								onclick={() => {
 									newKeyPaths = [...newKeyPaths, ''];
 								}}>+ Add path</button
@@ -354,13 +354,13 @@
 						</div>
 						<div class="flex justify-end gap-1.5">
 							<button
-								class="cursor-pointer border border-border bg-transparent px-3 py-1.5 font-mono text-[10px] tracking-widest text-muted uppercase transition-all hover:border-muted hover:text-text"
+								class="cursor-pointer border border-border bg-transparent px-3 py-1.5 font-mono text-xs tracking-widest text-muted uppercase transition-all hover:border-muted hover:text-text"
 								onclick={() => {
 									showNewKey = false;
 								}}>Cancel</button
 							>
 							<button
-								class="cursor-pointer border-0 bg-accent px-3 py-1.5 font-mono text-[10px] font-medium tracking-widest text-bg uppercase transition-opacity hover:opacity-[0.88] disabled:cursor-not-allowed disabled:opacity-40"
+								class="cursor-pointer border-0 bg-accent px-3 py-1.5 font-mono text-xs font-medium tracking-widest text-bg uppercase transition-opacity hover:opacity-[0.88] disabled:cursor-not-allowed disabled:opacity-40"
 								onclick={submitKey}
 								disabled={creatingKey || !newKeyName}
 							>
@@ -377,12 +377,12 @@
 						<div
 							class="flex animate-[fadeUp_0.2s_ease_both] flex-col gap-1.5 border border-border bg-bg px-3 py-2.5"
 						>
-							<div class="text-[11px] text-text">{key.name}</div>
-							<code class="font-mono text-[10px] text-muted">{key.key_preview}</code>
+							<div class="text-sm text-text">{key.name}</div>
+							<code class="font-mono text-xs text-muted">{key.key_preview}</code>
 							<div class="flex flex-wrap items-center gap-1">
 								{#each key.permissions as perm (perm)}
 									<span
-										class="border border-border px-1.25 py-px text-[9px] tracking-widest text-muted uppercase"
+										class="border border-border px-1.25 py-px text-xs tracking-widest text-muted uppercase"
 										>{perm}</span
 									>
 								{/each}
@@ -398,7 +398,7 @@
 							</div>
 						</div>
 					{:else}
-						<p class="py-4 text-center text-[11px] text-border">No API keys</p>
+						<p class="py-4 text-center text-sm text-border">No API keys</p>
 					{/each}
 				{/await}
 			</div>
@@ -409,20 +409,20 @@
 				{:then stats}
 					<div class="grid grid-cols-2 gap-2">
 						<div class="flex flex-col gap-1.5 border border-border bg-bg px-3 py-3.5">
-							<span class="text-[9px] tracking-[0.14em] text-muted uppercase">Total size</span>
-							<span class="font-heading text-[18px] leading-none text-accent"
+							<span class="text-xs tracking-[0.14em] text-muted uppercase">Total size</span>
+							<span class="font-heading text-2xl leading-none text-accent"
 								>{formatFileSize(stats.totalSize)}</span
 							>
 						</div>
 						<div class="flex flex-col gap-1.5 border border-border bg-bg px-3 py-3.5">
-							<span class="text-[9px] tracking-[0.14em] text-muted uppercase">Objects</span>
-							<span class="font-heading text-[18px] leading-none text-accent"
+							<span class="text-xs tracking-[0.14em] text-muted uppercase">Objects</span>
+							<span class="font-heading text-2xl leading-none text-accent"
 								>{stats.objectCount.toLocaleString()}</span
 							>
 						</div>
 					</div>
 					<button
-						class="mt-2 flex cursor-pointer items-center gap-1.25 border-0 bg-transparent px-0 py-1 font-mono text-[10px] text-muted transition-colors hover:text-text"
+						class="mt-2 flex cursor-pointer items-center gap-1.25 border-0 bg-transparent px-0 py-1 font-mono text-xs text-muted transition-colors hover:text-text"
 						onclick={() => getStorageStatsQuery().refresh()}
 					>
 						<RefreshCw size={11} /> Refresh

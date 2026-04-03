@@ -71,31 +71,31 @@
 	<div
 		class="card relative w-full max-w-[420px] animate-[fadeUp_0.5s_ease_both] border border-border bg-surface px-10 py-12"
 	>
-		<p class="mb-5 text-[10px] tracking-[0.18em] text-accent uppercase">Secure upload</p>
-		<h1 class="font-heading mb-6 text-[36px] text-text">Upload file.</h1>
+		<p class="mb-5 text-xs tracking-[0.18em] text-accent uppercase">Secure upload</p>
+		<h1 class="font-heading mb-6 text-5xl text-text">Upload file.</h1>
 
 		<div class="mb-7 flex flex-wrap gap-3 border-b border-border pb-5">
 			<span class="flex flex-col gap-[3px]">
-				<span class="text-[9px] tracking-[0.16em] text-muted uppercase">Path</span>
-				<code class="font-mono text-[12px] text-text">{data.targetPath}</code>
+				<span class="text-xs tracking-[0.16em] text-muted uppercase">Path</span>
+				<code class="font-mono text-sm text-text">{data.targetPath}</code>
 			</span>
 			<span class="flex flex-col gap-[3px]">
-				<span class="text-[9px] tracking-[0.16em] text-muted uppercase">Remaining</span>
-				<span class="font-mono text-[12px] text-text">{remainingUploads} / {data.maxUploads}</span>
+				<span class="text-xs tracking-[0.16em] text-muted uppercase">Remaining</span>
+				<span class="font-mono text-sm text-text">{remainingUploads} / {data.maxUploads}</span>
 			</span>
 			<span class="flex flex-col gap-[3px]">
-				<span class="text-[9px] tracking-[0.16em] text-muted uppercase">Expires in</span>
-				<span class="font-mono text-[12px] text-accent">{formatExpiry(data.expiresAt)}</span>
+				<span class="text-xs tracking-[0.16em] text-muted uppercase">Expires in</span>
+				<span class="font-mono text-sm text-accent">{formatExpiry(data.expiresAt)}</span>
 			</span>
 		</div>
 
 		{#if done}
-			<div class="flex flex-col items-center gap-3 py-6 text-[14px] text-accent">
+			<div class="flex flex-col items-center gap-3 py-6 text-lg text-accent">
 				<CheckCircle size={28} />
 				<span>Upload complete!</span>
 				{#if remainingUploads > 0}
 					<button
-						class="mt-2 cursor-pointer border border-border bg-transparent px-4 py-2 font-mono text-[10px] tracking-[0.1em] text-muted uppercase transition-all hover:border-accent hover:text-accent"
+						class="mt-2 cursor-pointer border border-border bg-transparent px-4 py-2 font-mono text-xs tracking-[0.1em] text-muted uppercase transition-all hover:border-accent hover:text-accent"
 						style="border-radius:0"
 						onclick={() => {
 							done = false;
@@ -110,7 +110,7 @@
 		{:else}
 			<!-- svelte-ignore a11y_interactive_supports_focus -->
 			<div
-				class="justify-content-center mb-5 flex cursor-pointer flex-col items-center gap-2.5 border border-dashed px-5 py-9 text-[12px] text-muted transition-[border-color,background] hover:border-accent hover:bg-accent/[0.04] {dropActive
+				class="justify-content-center mb-5 flex cursor-pointer flex-col items-center gap-2.5 border border-dashed px-5 py-9 text-sm text-muted transition-[border-color,background] hover:border-accent hover:bg-accent/[0.04] {dropActive
 					? 'border-accent bg-accent/[0.04]'
 					: 'border-border'} {files && files.length > 0 ? 'border-solid border-accent' : ''}"
 				role="button"
@@ -131,8 +131,8 @@
 				}}
 			>
 				{#if files && files.length > 0}
-					<p class="text-center text-[13px] break-all text-text">{files[0].name}</p>
-					<p class="text-[11px] text-muted">{formatFileSize(files[0].size)}</p>
+					<p class="text-center text-base break-all text-text">{files[0].name}</p>
+					<p class="text-sm text-muted">{formatFileSize(files[0].size)}</p>
 				{:else}
 					<Upload size={20} />
 					<span>Drop file here or click to browse</span>
@@ -150,7 +150,7 @@
 
 			{#if errorMsg}
 				<p
-					class="mb-4 flex items-center gap-1.5 border border-[rgba(255,80,80,0.3)] bg-[rgba(255,80,80,0.1)] px-3 py-2 text-[12px] text-[#ff8080]"
+					class="mb-4 flex items-center gap-1.5 border border-[rgba(255,80,80,0.3)] bg-[rgba(255,80,80,0.1)] px-3 py-2 text-sm text-[#ff8080]"
 				>
 					<XCircle size={13} />{errorMsg}
 				</p>
@@ -163,11 +163,11 @@
 						style="width: {progress}%"
 					></div>
 				</div>
-				<p class="mb-4 text-right text-[10px] text-muted">{progress}%</p>
+				<p class="mb-4 text-right text-xs text-muted">{progress}%</p>
 			{/if}
 
 			<button
-				class="flex w-full cursor-pointer items-center justify-center gap-2 border-none bg-accent py-3.5 font-mono text-[12px] font-medium tracking-[0.12em] text-[#0e0e0e] uppercase transition-opacity hover:opacity-[0.88] disabled:cursor-not-allowed disabled:opacity-40"
+				class="flex w-full cursor-pointer items-center justify-center gap-2 border-none bg-accent py-3.5 font-mono text-sm font-medium tracking-[0.12em] text-[#0e0e0e] uppercase transition-opacity hover:opacity-[0.88] disabled:cursor-not-allowed disabled:opacity-40"
 				style="border-radius:0"
 				disabled={!files || uploading}
 				onclick={upload}
