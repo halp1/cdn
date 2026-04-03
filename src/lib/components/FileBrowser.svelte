@@ -9,7 +9,7 @@
 	import RightPanel from '$lib/components/RightPanel.svelte';
 	import NewFolderModal from '$lib/components/NewFolderModal.svelte';
 	import DeleteModal from '$lib/components/DeleteModal.svelte';
-	import KeyboardManager from '$lib/components/KeyboardManager.svelte';
+	import KeyboardManager, { type KeyBind } from '$lib/components/KeyboardManager.svelte';
 	import FileSearchModal from '$lib/components/FileSearchModal.svelte';
 	import {
 		listObjectsQuery,
@@ -44,7 +44,7 @@
 	const rightWidth = $derived(Math.max(220, Math.round((windowWidth - treeWidth) * rightRatio)));
 
 	let filesData = $state<{ objects: R2Object[]; prefix: string } | null>(null);
-	let allObjectsData = $state<{ objects: { key: string; isFolder: boolean }[] } | null>(null);
+	let allObjectsData = $state<{ objects: R2Object[] } | null>(null);
 
 	const refreshFiles = async () => {
 		filesData = await listObjectsQuery({ prefix: path });
@@ -61,6 +61,18 @@
 		listObjectsQuery({ prefix: p }).then((result) => {
 			filesData = result;
 		});
+	});
+
+	let pendingSelect = $state<{ key: string; forPath: string } | null>(null);
+	let scrollToKey = $state<string | null>(null);
+
+	$effect(() => {
+		if (pendingSelect !== null && filesData !== null && path === pendingSelect.forPath) {
+			const key = pendingSelect.key;
+			pendingSelect = null;
+			scrollToKey = key;
+			handleSelect([key], true);
+		}
 	});
 
 	$effect(() => {
@@ -111,6 +123,7 @@
 	};
 
 	let deleteModalKeys = $state<string[] | null>(null);
+	let sortedFileItems = $state<R2Object[]>([]);
 
 	const handleDelete = (keys: string[]) => {
 		deleteModalKeys = keys;
@@ -137,6 +150,69 @@
 	};
 
 	let showNewFolderModal = $state(false);
+
+	const isAnyModalOpen = $derived(
+		isSearchModalOpen || deleteModalKeys !== null || showNewFolderModal
+	);
+
+	const arrowNavigate = (dir: 1 | -1) => {
+		if (sortedFileItems.length === 0) return;
+		let idx: number;
+		if (selected.size === 0) {
+			idx = dir === 1 ? 0 : sortedFileItems.length - 1;
+		} else {
+			let boundary = dir === 1 ? -1 : sortedFileItems.length;
+			for (let i = 0; i < sortedFileItems.length; i++) {
+				if (selected.has(sortedFileItems[i].key)) {
+					if (dir === 1) boundary = Math.max(boundary, i);
+					else boundary = Math.min(boundary, i);
+				}
+			}
+			idx = Math.max(0, Math.min(sortedFileItems.length - 1, boundary + dir));
+		}
+		const item = sortedFileItems[idx];
+		handleSelect([item.key], true);
+		if (rightPanel === 'preview' && !item.isFolder) handlePreview(item);
+	};
+
+	const keybinds = $derived<KeyBind[]>([
+		{
+			key: 'k',
+			ctrlOrMeta: true,
+			allowInModal: true,
+			action: () => {
+				if (isSearchModalOpen) {
+					isSearchModalOpen = false;
+					searchModalQuery = '';
+				} else if (!isAnyModalOpen) {
+					isSearchModalOpen = true;
+				}
+			}
+		},
+		{
+			key: 'Delete',
+			action: () => {
+				if (selected.size > 0) handleDelete([...selected]);
+			}
+		},
+		{
+			key: 'ArrowDown',
+			action: () => arrowNavigate(1)
+		},
+		{
+			key: 'ArrowUp',
+			action: () => arrowNavigate(-1)
+		},
+		{
+			key: 'Escape',
+			action: () => {
+				if (rightPanel !== null) {
+					rightPanel = null;
+					previewObj = null;
+				}
+			}
+		}
+	]);
 
 	const handleNewFolder = () => {
 		showNewFolderModal = true;
@@ -208,15 +284,7 @@
 
 <svelte:window bind:innerWidth={windowWidth} />
 
-<KeyboardManager
-	isModalOpen={isSearchModalOpen}
-	onToggleModal={(open) => {
-		isSearchModalOpen = open;
-		if (!open) {
-			searchModalQuery = '';
-		}
-	}}
-/>
+<KeyboardManager {keybinds} {isAnyModalOpen} />
 
 <div class="relative z-1 flex h-screen flex-col overflow-hidden bg-bg">
 	<Header
@@ -237,7 +305,12 @@
 				objects={allObjectsData.objects}
 				currentPath={path}
 				onNavigate={navigate}
-				onPreview={(obj) => handlePreview(obj as import('$lib/r2-server').R2Object)}
+				onPreview={(obj) => {
+					handlePreview(obj as import('$lib/r2-server').R2Object);
+					const lastSlash = obj.key.lastIndexOf('/');
+					const forPath = lastSlash > 0 ? obj.key.slice(0, lastSlash + 1) : '';
+					pendingSelect = { key: obj.key, forPath };
+				}}
 				width={treeWidth}
 				onResize={(w) => {
 					treeWidth = w;
@@ -312,27 +385,35 @@
 				</div>
 			</div>
 
-			{#if filesData === null}
-				<div
-					class="flex h-50 items-center justify-center text-sm tracking-widest text-muted uppercase"
-				>
-					Loading…
-				</div>
-			{:else}
-				<FileList
-					objects={filesData.objects}
-					prefix={path}
-					{selected}
-					onSelect={handleSelect}
-					onNavigate={navigate}
-					onDelete={handleDelete}
-					onMove={handleMove}
-					onPreview={handlePreview}
-					onNewFolder={handleNewFolder}
-					onUpload={handleUpload}
-					searchQuery=""
-				/>
-			{/if}
+			<div class="min-h-0 flex-1">
+				{#if filesData === null}
+					<div
+						class="flex h-50 items-center justify-center text-sm tracking-widest text-muted uppercase"
+					>
+						Loading…
+					</div>
+				{:else}
+					<FileList
+						objects={filesData.objects}
+						allObjects={allObjectsData?.objects ?? []}
+						prefix={path}
+						{selected}
+						{scrollToKey}
+						previewKey={previewObj?.key ?? null}
+						onSelect={handleSelect}
+						onNavigate={navigate}
+						onDelete={handleDelete}
+						onMove={handleMove}
+						onPreview={handlePreview}
+						onNewFolder={handleNewFolder}
+						onUpload={handleUpload}
+						searchQuery=""
+						onSortedChange={(items) => {
+							sortedFileItems = items;
+						}}
+					/>
+				{/if}
+			</div>
 		</main>
 
 		{#if rightPanel && rightPanel !== 'preview'}

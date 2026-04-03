@@ -12,9 +12,11 @@
 	import FileIcon from './FileIcon.svelte';
 	import { formatFileSize } from '$lib/utils';
 	import type { R2Object } from '$lib/r2-server';
+	import { SvelteMap } from 'svelte/reactivity';
 
 	interface Props {
 		objects: R2Object[];
+		allObjects?: R2Object[];
 		prefix: string;
 		selected: Set<string>;
 		onSelect: (keys: string[], replace: boolean) => void;
@@ -25,10 +27,14 @@
 		onNewFolder: () => void;
 		onUpload: () => void;
 		searchQuery: string;
+		onSortedChange?: (items: R2Object[]) => void;
+		scrollToKey?: string | null;
+		previewKey?: string | null;
 	}
 
 	let {
 		objects,
+		allObjects = [],
 		prefix,
 		selected,
 		onSelect,
@@ -37,13 +43,44 @@
 		onMove,
 		onPreview,
 		onUpload,
-		searchQuery
+		searchQuery,
+		onSortedChange,
+		scrollToKey = null,
+		previewKey = null
 	}: Props = $props();
 
 	type SortKey = 'name' | 'size' | 'modified';
 	type SortDir = 'asc' | 'desc';
 	let sortKey = $state<SortKey>('name');
 	let sortDir = $state<SortDir>('asc');
+
+	const folderStats = $derived.by(() => {
+		const map = new SvelteMap<string, { size: number; lastModified: Date | undefined }>();
+		for (const obj of allObjects) {
+			if (obj.isFolder) continue;
+			const key = obj.key;
+			const parts = key.split('/');
+			for (let depth = 1; depth < parts.length; depth++) {
+				const folderKey = parts.slice(0, depth).join('/') + '/';
+				const existing = map.get(folderKey);
+				if (existing) {
+					existing.size += obj.size ?? 0;
+					if (
+						obj.lastModified &&
+						(!existing.lastModified || obj.lastModified > existing.lastModified)
+					) {
+						existing.lastModified = obj.lastModified;
+					}
+				} else {
+					map.set(folderKey, { size: obj.size ?? 0, lastModified: obj.lastModified });
+				}
+			}
+		}
+		return map;
+	});
+
+	const getFolderSize = (key: string) => folderStats.get(key)?.size;
+	const getFolderModified = (key: string) => folderStats.get(key)?.lastModified;
 
 	let contextMenu = $state<{ x: number; y: number; key: string } | null>(null);
 	let lastAnchorKey = $state<string | null>(null);
@@ -65,12 +102,30 @@
 			if (a.isFolder !== b.isFolder) return a.isFolder ? -1 : 1;
 			let cmp = 0;
 			if (sortKey === 'name') cmp = a.key.localeCompare(b.key);
-			else if (sortKey === 'size') cmp = (a.size ?? 0) - (b.size ?? 0);
-			else if (sortKey === 'modified')
-				cmp = (a.lastModified?.getTime() ?? 0) - (b.lastModified?.getTime() ?? 0);
+			else if (sortKey === 'size') {
+				const sa = a.isFolder ? (getFolderSize(a.key) ?? 0) : (a.size ?? 0);
+				const sb = b.isFolder ? (getFolderSize(b.key) ?? 0) : (b.size ?? 0);
+				cmp = sa - sb;
+			} else if (sortKey === 'modified') {
+				const ma = a.isFolder ? getFolderModified(a.key) : a.lastModified;
+				const mb = b.isFolder ? getFolderModified(b.key) : b.lastModified;
+				cmp = (ma?.getTime() ?? 0) - (mb?.getTime() ?? 0);
+			}
 			return sortDir === 'asc' ? cmp : -cmp;
 		});
 		return items;
+	});
+
+	$effect(() => {
+		onSortedChange?.(sorted());
+	});
+
+	$effect(() => {
+		if (scrollToKey) {
+			document
+				.querySelector(`[data-key=${CSS.escape(scrollToKey)}]`)
+				?.scrollIntoView({ block: 'nearest' });
+		}
 	});
 
 	const getLabel = (obj: R2Object): string => {
@@ -122,7 +177,7 @@
 		if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
 		else {
 			sortKey = key;
-			sortDir = key === 'size' || key === 'date' ? 'desc' : 'asc';
+			sortDir = key === 'size' || key === 'modified' ? 'desc' : 'asc';
 		}
 	};
 
@@ -196,10 +251,14 @@
 		{:else}
 			{#each sorted() as obj, i (obj.key)}
 				{@const isSelected = selected.has(obj.key)}
+				{@const isOpen = obj.key === previewKey}
 				<div
+					data-key={obj.key}
 					class="group list-row grid h-7.5 animate-[fadeUp_0.25s_ease_both] cursor-pointer border-b border-border/50 ring-0 outline-0 transition-colors select-none {isSelected
 						? 'bg-accent/[0.07]'
-						: 'hover:bg-white/3'}"
+						: isOpen
+							? 'bg-[#6ab4f5]/6'
+							: 'hover:bg-white/3'}"
 					style="grid-template-columns: 28px 1fr 80px 110px 32px; animation-delay: {Math.min(
 						i,
 						30
@@ -212,7 +271,10 @@
 					tabindex="0"
 					onkeydown={(e) => e.key === 'Enter' && handleRowDblClick(obj)}
 				>
-					<div class="flex items-center pl-2">
+					<div class="relative flex items-center pl-2">
+						{#if isOpen}
+							<span class="absolute inset-y-0 -left-2 w-0.5 bg-[#6ab4f5]"></span>
+						{/if}
 						{#if obj.isFolder}
 							<Folder size={13} class="text-[#e8c87a]" />
 						{:else}
@@ -223,14 +285,20 @@
 						<span
 							class="overflow-hidden text-sm text-ellipsis whitespace-nowrap {isSelected
 								? 'text-accent'
-								: 'text-text'}">{getLabel(obj)}</span
+								: isOpen
+									? 'text-[#6ab4f5]'
+									: 'text-text'}">{getLabel(obj)}</span
 						>
 					</div>
 					<div class="flex items-center justify-end px-1.5 font-mono text-sm text-muted">
-						{obj.isFolder ? '—' : formatFileSize(obj.size ?? 0)}
+						{obj.isFolder
+							? getFolderSize(obj.key) !== undefined
+								? formatFileSize(getFolderSize(obj.key)!)
+								: '—'
+							: formatFileSize(obj.size ?? 0)}
 					</div>
 					<div class="flex items-center justify-end px-1.5 font-mono text-sm text-muted">
-						{obj.isFolder ? '—' : formatDate(obj.lastModified)}
+						{obj.isFolder ? formatDate(getFolderModified(obj.key)) : formatDate(obj.lastModified)}
 					</div>
 					<div class="flex items-center justify-center">
 						<button

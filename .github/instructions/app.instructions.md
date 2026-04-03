@@ -138,6 +138,17 @@ Use SvelteKit remote functions (`$lib/api/*.remote.ts`) for all client-server co
 - `DELETE /delete` — delete object
 - `GET /download?key=` — get presigned download URL
 
+## Keyboard System
+
+Global keyboard shortcuts are managed by `KeyboardManager.svelte`.
+
+- Add keybinds by passing a `KeyBind[]` array (from `$lib/components/KeyboardManager.svelte`) to `<KeyboardManager>`
+- Each `KeyBind` has: `key` (exact `e.key` value), optional modifier flags (`ctrl`, `meta`, `ctrlOrMeta`, `shift`, `alt`), `action: () => void`, and `allowInModal?: boolean`
+- `isAnyModalOpen` must be passed alongside `keybinds`; binds without `allowInModal: true` are skipped while any modal is open
+- Keybinds fire only when focus is NOT on an `<input>`, `<textarea>`, or `contenteditable` element
+- `keybinds` is typically `$derived<KeyBind[]>([...])` so it reacts to state changes
+- Current binds in `FileBrowser`: `Ctrl/Meta+K` (search), `Delete` (delete selected), `ArrowUp`/`ArrowDown` (navigate list), `Escape` (close right panel)
+
 ## Security Rules
 
 - Sanitize all filenames: strip path traversal chars (`..`, `/`, `\`), control chars, limit length to 255
