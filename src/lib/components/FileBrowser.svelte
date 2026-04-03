@@ -1,4 +1,5 @@
 <script lang="ts">
+	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { goto } from '$app/navigation';
 	import { FolderPlus, Upload, Trash2 } from 'lucide-svelte';
 	import Header from '$lib/components/Header.svelte';
@@ -54,8 +55,6 @@
 		const p = path;
 		filesData = null;
 		selected = new Set();
-		previewObj = null;
-		if (rightPanel === 'preview') rightPanel = null;
 		listObjectsQuery({ prefix: p }).then((result) => {
 			filesData = result;
 		});
@@ -193,7 +192,7 @@
 
 	<div class="flex min-h-0 flex-1 overflow-hidden">
 		{#if allObjectsData === null}
-			<div class="w-55 shrink-0 border-r border-(--border) bg-(--surface)"></div>
+			<div class="w-55 shrink-0 border-r border-border bg-(--surface)"></div>
 		{:else}
 			<FileTree
 				objects={allObjectsData.objects}
@@ -209,21 +208,21 @@
 
 		<main class="flex min-w-0 flex-1 flex-col overflow-hidden">
 			<div
-				class="flex h-9 shrink-0 items-center justify-between gap-2 border-b border-(--border) px-3"
+				class="relative flex h-9 shrink-0 items-center justify-between gap-2 border-b border-border px-3"
 			>
-				<nav class="flex min-w-0 flex-1 items-center text-[11px]" aria-label="Breadcrumb">
+				<nav class="flex h-full min-w-0 flex-1 items-center bg-bg text-sm" aria-label="Breadcrumb">
 					{#if breadcrumbs.length === 0}
-						<span class="text-(--text)">root</span>
+						<span class="text-text">root</span>
 					{:else}
-						<a href="/" class="px-0.5 text-(--muted) transition-colors hover:text-(--text)">root</a>
+						<a href="/" class="px-0.5 text-muted transition-colors hover:text-text">root</a>
 						{#each breadcrumbs as crumb, i (crumb.href)}
-							<span class="px-1 text-(--border) select-none">/</span>
+							<span class="px-1 text-border select-none">/</span>
 							{#if i === breadcrumbs.length - 1}
-								<span class="px-0.5 text-(--text)">{crumb.label}</span>
+								<span class="px-0.5 whitespace-nowrap text-text">{crumb.label}</span>
 							{:else}
 								<a
 									href={crumb.href}
-									class="px-0.5 text-(--muted) transition-colors hover:text-(--text)"
+									class="px-0.5 whitespace-nowrap text-muted transition-colors hover:text-text"
 									>{crumb.label}</a
 								>
 							{/if}
@@ -233,7 +232,7 @@
 				<div class="flex shrink-0 items-center gap-1">
 					{#if selected.size > 0}
 						<button
-							class="flex cursor-pointer items-center gap-1.25 border border-[#ff6b6b]/40 bg-transparent px-2 py-1 font-mono text-[10px] tracking-[0.06em] text-[#ff6b6b] uppercase transition-[color,border-color,background] hover:border-[#ff6b6b]"
+							class="flex cursor-pointer items-center gap-1.25 border border-[#ff6b6b]/40 bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-[#ff6b6b] uppercase transition-[color,border-color,background] hover:border-[#ff6b6b]"
 							onclick={() => handleDelete([...selected])}
 							title="Delete selected"
 						>
@@ -242,7 +241,7 @@
 						</button>
 					{/if}
 					<button
-						class="flex cursor-pointer items-center gap-1.25 border border-(--border) bg-transparent px-2 py-1 font-mono text-[10px] tracking-[0.06em] text-(--muted) uppercase transition-[color,border-color,background] hover:border-(--muted) hover:bg-white/3 hover:text-(--text)"
+						class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-(--muted) uppercase transition-[color,border-color,background] hover:border-(--muted) hover:bg-white/3 hover:text-(--text)"
 						onclick={handleNewFolder}
 						title="New folder"
 					>
@@ -250,7 +249,7 @@
 						<span>New folder</span>
 					</button>
 					<button
-						class="flex cursor-pointer items-center gap-1.25 border border-(--border) bg-transparent px-2 py-1 font-mono text-[10px] tracking-[0.06em] text-(--muted) uppercase transition-[color,border-color,background] hover:border-(--muted) hover:bg-white/3 hover:text-(--text)"
+						class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-(--muted) uppercase transition-[color,border-color,background] hover:border-(--muted) hover:bg-white/3 hover:text-(--text)"
 						onclick={handleUpload}
 						title="Upload"
 					>
@@ -262,7 +261,7 @@
 
 			{#if filesData === null}
 				<div
-					class="flex h-50 items-center justify-center text-[11px] tracking-widest text-(--muted) uppercase"
+					class="flex h-50 items-center justify-center text-sm tracking-widest text-(--muted) uppercase"
 				>
 					Loading…
 				</div>
@@ -296,7 +295,7 @@
 			/>
 		{:else if rightPanel === 'preview'}
 			<aside
-				class="relative flex shrink-0 flex-col overflow-hidden border-l border-(--border) bg-(--surface)"
+				class="relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-(--surface)"
 				style="width: {rightWidth}px"
 			>
 				<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -307,7 +306,7 @@
 							sw = rightWidth;
 						const contentW = windowWidth - treeWidth;
 						const mm = (ev: MouseEvent) => {
-							const newW = Math.max(220, Math.min(700, sw - (ev.clientX - sx)));
+							const newW = Math.max(220, Math.min(contentW - 28, sw - (ev.clientX - sx)));
 							rightRatio = newW / contentW;
 						};
 						const mu = () => {
@@ -335,9 +334,9 @@
 	</div>
 
 	<div
-		class="flex h-6 shrink-0 items-center justify-end border-t border-(--border) bg-(--surface) px-3"
+		class="flex h-6 shrink-0 items-center justify-end border-t border-border bg-(--surface) px-3"
 	>
-		<div class="text-[10px] tracking-[0.08em] text-(--muted)">
+		<div class="text-xs tracking-[0.08em] text-(--muted)">
 			<span>{selectedCount} selected</span>
 		</div>
 	</div>

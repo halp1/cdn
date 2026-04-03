@@ -131,15 +131,15 @@
 	class="relative flex shrink-0 flex-col overflow-hidden border-r border-border bg-surface"
 	style="width: {width}px"
 >
-	<div class="flex h-8 shrink-0 items-center border-b border-border px-3">
-		<span class="text-[9px] tracking-[0.16em] text-muted uppercase">Files</span>
+	<div class="flex h-9 shrink-0 items-center border-b border-border px-3">
+		<span class="text-xs tracking-[0.16em] text-muted uppercase">Files</span>
 	</div>
 
 	<div
 		class="flex-1 overflow-x-hidden overflow-y-auto py-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
 	>
 		<button
-			class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 pl-3 text-left font-mono text-[11px] text-ellipsis whitespace-nowrap transition-colors {currentPath ===
+			class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 pl-3 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors {currentPath ===
 			''
 				? 'bg-accent/6 text-accent'
 				: 'text-muted hover:bg-white/3 hover:text-text'}"
@@ -156,7 +156,7 @@
 				<div class="flex flex-col" style="padding-left: {depth * 12 + 8}px">
 					{#if node.isFolder}
 						<button
-							class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 text-left font-mono text-[11px] text-ellipsis whitespace-nowrap transition-colors {isActive
+							class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors {isActive
 								? 'bg-accent/6 text-accent'
 								: 'text-muted hover:bg-white/3 hover:text-text'}"
 							onclick={() => {
@@ -190,7 +190,7 @@
 						</button>
 					{:else}
 						<button
-							class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 text-left font-mono text-[11px] text-ellipsis whitespace-nowrap text-muted/70 transition-colors hover:bg-white/3 hover:text-text"
+							class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 text-left font-mono text-sm text-ellipsis whitespace-nowrap text-muted/70 transition-colors hover:bg-white/3 hover:text-text"
 							onclick={() => {
 								const parentPath = node.path.includes('/')
 									? node.path.slice(0, node.path.lastIndexOf('/') + 1)

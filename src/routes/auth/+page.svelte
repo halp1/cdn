@@ -17,16 +17,16 @@
 	<div
 		class="card relative w-full max-w-[380px] animate-[fadeUp_0.5s_ease_both] border border-border bg-surface px-10 py-12"
 	>
-		<p class="mb-5 text-[10px] tracking-[0.18em] text-accent uppercase">
+		<p class="mb-5 text-xs tracking-[0.18em] text-accent uppercase">
 			{mode === 'login' ? 'Welcome back' : 'Create account'}
 		</p>
-		<h1 class="font-heading mb-9 text-[36px] leading-[1.1] text-text">
+		<h1 class="font-heading mb-9 text-5xl leading-[1.1] text-text">
 			{mode === 'login' ? 'Sign in.' : 'Register.'}
 		</h1>
 
 		{#if form && !form.success}
 			<p
-				class="mb-5 border border-[rgba(255,80,80,0.3)] bg-[rgba(255,80,80,0.1)] px-3 py-2.5 text-[12px] text-[#ff8080]"
+				class="mb-5 border border-[rgba(255,80,80,0.3)] bg-[rgba(255,80,80,0.1)] px-3 py-2.5 text-sm text-[#ff8080]"
 			>
 				{form.message}
 			</p>
@@ -34,11 +34,11 @@
 
 		<form method="POST" action="?/{mode}">
 			<div class="mb-5">
-				<label class="mb-2 block text-[10px] tracking-[0.14em] text-muted uppercase" for="username"
+				<label class="mb-2 block text-xs tracking-[0.14em] text-muted uppercase" for="username"
 					>Username</label
 				>
 				<input
-					class="w-full appearance-none rounded-none border border-border bg-input-bg px-3.5 py-3 font-mono text-[14px] text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+					class="w-full appearance-none rounded-none border border-border bg-input-bg px-3.5 py-3 font-mono text-lg text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
 					id="username"
 					name="username"
 					type="text"
@@ -49,11 +49,11 @@
 				/>
 			</div>
 			<div class="mb-5">
-				<label class="mb-2 block text-[10px] tracking-[0.14em] text-muted uppercase" for="password"
+				<label class="mb-2 block text-xs tracking-[0.14em] text-muted uppercase" for="password"
 					>Password</label
 				>
 				<input
-					class="w-full appearance-none rounded-none border border-border bg-input-bg px-3.5 py-3 font-mono text-[14px] text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+					class="w-full appearance-none rounded-none border border-border bg-input-bg px-3.5 py-3 font-mono text-lg text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
 					id="password"
 					name="password"
 					type="password"
@@ -65,11 +65,11 @@
 			{#if mode === 'register'}
 				<div class="mb-5">
 					<label
-						class="mb-2 block text-[10px] tracking-[0.14em] text-muted uppercase"
+						class="mb-2 block text-xs tracking-[0.14em] text-muted uppercase"
 						for="confirmPassword">Confirm password</label
 					>
 					<input
-						class="w-full appearance-none rounded-none border border-border bg-input-bg px-3.5 py-3 font-mono text-[14px] text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+						class="w-full appearance-none rounded-none border border-border bg-input-bg px-3.5 py-3 font-mono text-lg text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
 						id="confirmPassword"
 						name="confirmPassword"
 						type="password"
@@ -81,24 +81,24 @@
 			{/if}
 			<button
 				type="submit"
-				class="mt-2 w-full cursor-pointer border-none bg-accent py-3.5 font-mono text-[12px] font-medium tracking-[0.12em] text-[#0e0e0e] uppercase transition-[opacity,transform] hover:opacity-[0.88] active:scale-[0.99]"
+				class="mt-2 w-full cursor-pointer border-none bg-accent py-3.5 font-mono text-sm font-medium tracking-[0.12em] text-[#0e0e0e] uppercase transition-[opacity,transform] hover:opacity-[0.88] active:scale-[0.99]"
 				>{mode === 'login' ? 'Log in' : 'Create account'}</button
 			>
 		</form>
 
 		{#if !data.isFirstUser}
-			<div class="divider my-7 flex items-center gap-3 text-[11px] text-border">or</div>
-			<p class="text-center text-[12px] text-muted">
+			<div class="divider my-7 flex items-center gap-3 text-sm text-border">or</div>
+			<p class="text-center text-sm text-muted">
 				{#if mode === 'login'}
 					No account? <button
 						type="button"
-						class="cursor-pointer border-0 border-b border-border bg-transparent p-0 font-mono text-[12px] text-text transition-[color,border-color] hover:border-accent hover:text-accent"
+						class="cursor-pointer border-0 border-b border-border bg-transparent p-0 font-mono text-sm text-text transition-[color,border-color] hover:border-accent hover:text-accent"
 						onclick={() => (mode = 'register')}>Register</button
 					>
 				{:else}
 					Have an account? <button
 						type="button"
-						class="cursor-pointer border-0 border-b border-border bg-transparent p-0 font-mono text-[12px] text-text transition-[color,border-color] hover:border-accent hover:text-accent"
+						class="cursor-pointer border-0 border-b border-border bg-transparent p-0 font-mono text-sm text-text transition-[color,border-color] hover:border-accent hover:text-accent"
 						onclick={() => (mode = 'login')}>Sign in</button
 					>
 				{/if}
