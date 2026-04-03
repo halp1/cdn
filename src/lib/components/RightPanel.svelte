@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Plus, Trash2, Copy, Check, RefreshCw, X } from 'lucide-svelte';
+	import { Plus, Trash2, Copy, Check, RefreshCw, X } from '@lucide/svelte';
 	import { getUploadLinks, createUploadLink, deleteUploadLink } from '$lib/api/upload-links.remote';
 	import { getApiKeys, createApiKeyCommand, deleteApiKeyCommand } from '$lib/api/api-keys.remote';
 	import { getStorageStatsQuery } from '$lib/api/r2.remote';

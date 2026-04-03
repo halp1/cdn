@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import { getPresignedUploadUrl, confirmUpload } from '$lib/api/upload.remote';
-	import { Upload, CheckCircle, XCircle, Loader } from 'lucide-svelte';
+	import { Upload, CheckCircle, XCircle, Loader } from '@lucide/svelte';
 	import { formatFileSize } from '$lib/utils';
 
 	interface Props {

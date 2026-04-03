@@ -1,7 +1,7 @@
 <script lang="ts">
 	/* eslint-disable svelte/no-navigation-without-resolve */
 	import { untrack } from 'svelte';
-	import { X, ExternalLink, Download, Loader } from 'lucide-svelte';
+	import { X, ExternalLink, Download, Loader } from '@lucide/svelte';
 	import FileIcon from './FileIcon.svelte';
 	import type { R2Object } from '$lib/r2-server';
 	import { formatFileSize } from '$lib/utils';
@@ -23,10 +23,11 @@
 
 	const getExt = (key: string) => key.split('.').pop()?.toLowerCase() ?? '';
 
-	const getType = (key: string): 'image' | 'video' | 'text' | 'binary' => {
+	const getType = (key: string): 'image' | 'video' | 'audio' | 'text' | 'binary' => {
 		const ext = getExt(key);
 		if (['png', 'jpg', 'jpeg', 'jfif', 'gif', 'webp', 'svg', 'ico'].includes(ext)) return 'image';
 		if (['mp4', 'mov', 'webm', 'avi'].includes(ext)) return 'video';
+		if (['mp3', 'wav', 'ogg', 'flac', 'aac', 'm4a', 'opus', 'wma'].includes(ext)) return 'audio';
 		if (
 			[
 				'txt',
@@ -64,6 +65,7 @@
 		textContent = '';
 		error = '';
 		downloadUrl = '';
+		loading = false;
 
 		if (fileType === 'text') {
 			loading = true;
@@ -104,24 +106,24 @@
 	{:else}
 		<div class="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
 			<FileIcon filename={obj.key.split('/').pop() ?? obj.key} size={14} />
-			<span class="flex-1 truncate text-sm text-(--text)" title={obj.key}
+			<span class="flex-1 truncate text-sm text-text" title={obj.key}
 				>{obj.key.split('/').pop()}</span
 			>
 			<div class="flex shrink-0 items-center gap-0.5">
 				{#if obj.size}
-					<span class="mr-1 text-xs text-(--muted)">{formatFileSize(obj.size)}</span>
+					<span class="mr-1 text-xs text-muted">{formatFileSize(obj.size)}</span>
 				{/if}
 				<a
 					href={publicUrl}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="flex cursor-pointer items-center border-none bg-transparent p-1.25 text-(--muted) no-underline transition-colors hover:text-(--text)"
+					class="flex cursor-pointer items-center border-none bg-transparent p-1.25 text-muted no-underline transition-colors hover:text-text"
 					title="Open in new tab"
 				>
 					<ExternalLink size={13} />
 				</a>
 				<button
-					class="flex cursor-pointer items-center border-none bg-transparent p-1.25 text-(--muted) transition-colors hover:text-(--text)"
+					class="flex cursor-pointer items-center border-none bg-transparent p-1.25 text-muted transition-colors hover:text-text"
 					onclick={onClose}
 					title="Close"
 				>
@@ -134,7 +136,7 @@
 			class="flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
 		>
 			{#if loading}
-				<div class="flex h-37.5 flex-col items-center justify-center gap-3 text-sm text-(--muted)">
+				<div class="flex h-37.5 flex-col items-center justify-center gap-3 text-sm text-muted">
 					<Loader size={18} class="spin" />
 				</div>
 			{:else if error}
@@ -143,24 +145,32 @@
 				</div>
 			{:else if fileType === 'image'}
 				<div class="flex min-h-25 items-center justify-center p-4">
-					<img src={publicUrl} alt={obj.key} class="block max-h-100 max-w-full object-contain" />
+					<img src={publicUrl} alt={obj.key} class="block max-w-full object-contain" />
 				</div>
 			{:else if fileType === 'video'}
-				<video class="block max-h-100 w-full bg-black" controls>
-					<source src={publicUrl} />
-					<track kind="captions" />
-				</video>
+				<div class="flex min-h-25 w-full items-center justify-center p-4">
+					<video class="block w-full bg-black" controls>
+						<source src={publicUrl} />
+						<track kind="captions" />
+					</video>
+				</div>
+			{:else if fileType === 'audio'}
+				<div class="flex min-h-25 items-center justify-center p-4">
+					<audio class="w-full" controls>
+						<source src={publicUrl} />
+					</audio>
+				</div>
 			{:else if fileType === 'text'}
 				<pre
-					class="m-0 p-3 font-mono text-sm leading-relaxed break-all whitespace-pre-wrap text-(--text)">{textContent}</pre>
+					class="m-0 p-3 font-mono text-sm leading-relaxed break-all whitespace-pre-wrap text-text">{textContent}</pre>
 			{:else}
-				<div class="flex h-37.5 flex-col items-center justify-center gap-3 text-sm text-(--muted)">
+				<div class="flex h-37.5 flex-col items-center justify-center gap-3 text-sm text-muted">
 					<Download size={24} />
 					<span>Binary file</span>
 					{#if downloadUrl}
 						<a
 							href={downloadUrl}
-							class="inline-block bg-(--accent) px-4 py-2 font-mono text-sm font-medium tracking-widest text-bg uppercase no-underline transition-opacity hover:opacity-[0.88]"
+							class="inline-block bg-accent px-4 py-2 font-mono text-sm font-medium tracking-widest text-bg uppercase no-underline transition-opacity hover:opacity-[0.88]"
 							download>Download</a
 						>
 					{/if}
