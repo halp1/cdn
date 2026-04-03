@@ -139,10 +139,10 @@
 		class="flex-1 overflow-x-hidden overflow-y-auto py-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
 	>
 		<button
-			class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 pl-3 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors {currentPath ===
+			class="sticky top-0 z-20 flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none py-1 pr-2 pl-3 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors {currentPath ===
 			''
-				? 'bg-accent/6 text-accent'
-				: 'text-muted hover:bg-white/3 hover:text-text'}"
+				? 'bg-surface text-accent'
+				: 'bg-surface text-muted hover:bg-white/3 hover:text-text'}"
 			onclick={() => onNavigate('')}
 		>
 			<FolderOpen size={12} />
@@ -153,12 +153,14 @@
 			{#each nodes as node (node.path)}
 				{@const isOpen = expanded.has(node.path)}
 				{@const isActive = node.isFolder && currentPath === node.path}
-				<div class="flex flex-col" style="padding-left: {depth * 12 + 8}px">
+				<div class="flex flex-col">
 					{#if node.isFolder}
 						<button
-							class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors {isActive
-								? 'bg-accent/6 text-accent'
-								: 'text-muted hover:bg-white/3 hover:text-text'}"
+							class="sticky flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none py-1 pr-2 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors {isActive
+								? 'bg-surface text-accent'
+								: 'bg-surface text-muted hover:bg-white/3 hover:text-text'}"
+							style="padding-left: {depth * 12 + 8}px; z-index: {19 - depth}; top: {(depth + 1) *
+								28}px"
 							onclick={() => {
 								expanded.add(node.path);
 								onNavigate(node.path);
@@ -183,7 +185,10 @@
 									}
 								}}
 							>
-								{#if isOpen}<ChevronDown size={10} />{:else}<ChevronRight size={10} />{/if}
+								{#if isOpen}<ChevronDown size={10} />{:else}<ChevronRight
+										class="text-muted"
+										size={10}
+									/>{/if}
 							</span>
 							{#if isOpen}<FolderOpen size={12} />{:else}<Folder size={12} />{/if}
 							<span class="min-w-0 overflow-hidden text-ellipsis">{node.name}</span>
@@ -191,6 +196,7 @@
 					{:else}
 						<button
 							class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 text-left font-mono text-sm text-ellipsis whitespace-nowrap text-muted/70 transition-colors hover:bg-white/3 hover:text-text"
+							style="padding-left: {depth * 12 + 8}px"
 							onclick={() => {
 								const parentPath = node.path.includes('/')
 									? node.path.slice(0, node.path.lastIndexOf('/') + 1)

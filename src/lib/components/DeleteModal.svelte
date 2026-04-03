@@ -60,7 +60,7 @@
 			<button
 				bind:this={focusEl}
 				type="button"
-				class="cursor-pointer border border-[#ff6b6b] bg-[#ff6b6b] px-4 py-1.5 font-mono text-sm font-medium tracking-[0.12em] text-bg uppercase transition-opacity hover:opacity-80"
+				class="cursor-pointer border border-[#ff6b6b] bg-[#ff6b6b] px-4 py-1.5 font-mono text-sm font-medium tracking-[0.12em] text-bg uppercase transition-opacity hover:opacity-80 outline-0 ring-0"
 				onclick={onConfirm}
 			>
 				Delete

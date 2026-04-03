@@ -148,15 +148,15 @@
 					<img src={publicUrl} alt={obj.key} class="block max-w-full object-contain" />
 				</div>
 			{:else if fileType === 'video'}
-				<div class="flex min-h-25 w-full items-center justify-center p-4">
-					<video class="block w-full bg-black" controls>
+				<div class="flex w-full items-center justify-center p-4">
+					<video class="block bg-black" controls>
 						<source src={publicUrl} />
 						<track kind="captions" />
 					</video>
 				</div>
 			{:else if fileType === 'audio'}
-				<div class="flex min-h-25 items-center justify-center p-4">
-					<audio class="w-full" controls>
+				<div class="w-full relative p-4 flex items-center justify-center">
+					<audio class="max-w-96 w-full" controls>
 						<source src={publicUrl} />
 					</audio>
 				</div>
