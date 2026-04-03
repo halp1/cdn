@@ -1,21 +1,15 @@
 <script lang="ts">
 	import {
-		File,
 		Folder,
-		Image,
-		Film,
-		Music,
-		FileText,
-		FileCode,
-		FileArchive,
 		Upload,
 		Trash2,
 		MoveRight,
 		Link2,
-		MoreHorizontal,
-		FolderPlus,
-		ArrowUpDown
+		Ellipsis,
+		ArrowUpDown,
+		Eye
 	} from 'lucide-svelte';
+	import FileIcon from './FileIcon.svelte';
 	import { formatFileSize } from '$lib/utils';
 	import type { R2Object } from '$lib/r2-server';
 
@@ -42,7 +36,6 @@
 		onDelete,
 		onMove,
 		onPreview,
-		onNewFolder,
 		onUpload,
 		searchQuery
 	}: Props = $props();
@@ -85,24 +78,6 @@
 		return obj.isFolder ? rel.replace(/\/$/, '') : rel;
 	};
 
-	const getExt = (key: string): string => {
-		const parts = key.split('.');
-		return parts.length > 1 ? parts.pop()!.toLowerCase() : '';
-	};
-
-	const getIcon = (obj: R2Object) => {
-		if (obj.isFolder) return Folder;
-		const ext = getExt(obj.key);
-		if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico'].includes(ext)) return Image;
-		if (['mp4', 'mov', 'webm', 'avi', 'mkv'].includes(ext)) return Film;
-		if (['mp3', 'wav', 'flac', 'ogg', 'aac'].includes(ext)) return Music;
-		if (['md', 'txt', 'csv', 'log'].includes(ext)) return FileText;
-		if (['js', 'ts', 'jsx', 'tsx', 'html', 'css', 'json', 'py', 'rs', 'go', 'sh'].includes(ext))
-			return FileCode;
-		if (['zip', 'tar', 'gz', 'bz2', '7z'].includes(ext)) return FileArchive;
-		return File;
-	};
-
 	const handleRowClick = (e: MouseEvent, key: string) => {
 		if (e.shiftKey) {
 			if (lastAnchorKey !== null) {
@@ -112,10 +87,9 @@
 				if (anchorIdx !== -1 && clickIdx !== -1) {
 					const lo = Math.min(anchorIdx, clickIdx);
 					const hi = Math.max(anchorIdx, clickIdx);
-					onSelect(
-						items.slice(lo, hi + 1).map((o) => o.key),
-						true
-					);
+					const rangeKeys = items.slice(lo, hi + 1).map((o) => o.key);
+					onSelect([...selected, ...rangeKeys], true);
+					lastAnchorKey = key;
 					return;
 				}
 			}
@@ -180,40 +154,6 @@
 		onUpload();
 	}}
 >
-	<div class="flex h-9 shrink-0 items-center justify-between gap-1 border-b border-border px-3">
-		<div class="flex items-center gap-1">
-			<button
-				class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-[10px] tracking-[0.06em] text-muted uppercase transition-[color,border-color,background] hover:border-muted hover:bg-white/3 hover:text-text"
-				onclick={onNewFolder}
-				title="New folder"
-			>
-				<FolderPlus size={13} />
-				<span>New folder</span>
-			</button>
-			<button
-				class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-[10px] tracking-[0.06em] text-muted uppercase transition-[color,border-color,background] hover:border-muted hover:bg-white/3 hover:text-text"
-				onclick={onUpload}
-				title="Upload"
-			>
-				<Upload size={13} />
-				<span>Upload</span>
-			</button>
-			{#if selected.size > 0}
-				<button
-					class="flex cursor-pointer items-center gap-1.25 border border-[#ff6b6b]/40 bg-transparent px-2 py-1 font-mono text-[10px] tracking-[0.06em] text-[#ff6b6b] uppercase transition-[color,border-color,background] hover:border-[#ff6b6b] hover:bg-transparent"
-					onclick={() => onDelete([...selected])}
-					title="Delete selected"
-				>
-					<Trash2 size={13} />
-					<span>Delete {selected.size}</span>
-				</button>
-			{/if}
-		</div>
-		<span class="text-[10px] tracking-[0.06em] text-muted"
-			>{sorted().length} item{sorted().length !== 1 ? 's' : ''}</span
-		>
-	</div>
-
 	<div
 		class="list-header grid h-7 shrink-0 border-b border-border bg-surface"
 		style="grid-template-columns: 28px 1fr 80px 110px 32px"
@@ -255,7 +195,6 @@
 			</div>
 		{:else}
 			{#each sorted() as obj, i (obj.key)}
-				{@const Icon = getIcon(obj)}
 				{@const isSelected = selected.has(obj.key)}
 				<div
 					class="group list-row grid h-7.5 animate-[fadeUp_0.25s_ease_both] cursor-pointer border-b border-border/50 ring-0 outline-0 transition-colors select-none {isSelected
@@ -274,14 +213,11 @@
 					onkeydown={(e) => e.key === 'Enter' && handleRowDblClick(obj)}
 				>
 					<div class="flex items-center pl-2">
-						<Icon
-							size={13}
-							class={obj.isFolder
-								? 'text-[#e8c87a]'
-								: isSelected
-									? 'text-accent'
-									: 'text-muted group-hover:text-text'}
-						/>
+						{#if obj.isFolder}
+							<Folder size={13} class="text-[#e8c87a]" />
+						{:else}
+							<FileIcon filename={obj.key.split('/').pop() ?? obj.key} size={13} />
+						{/if}
 					</div>
 					<div class="flex min-w-0 items-center px-1.5">
 						<span
@@ -305,7 +241,7 @@
 							}}
 							title="More actions"
 						>
-							<MoreHorizontal size={12} />
+							<Ellipsis size={12} />
 						</button>
 					</div>
 				</div>
@@ -329,7 +265,7 @@
 						closeContext();
 					}}
 				>
-					<FileText size={12} /> Preview
+					<Eye size={12} /> Preview
 				</button>
 				<button
 					class="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3.5 py-1.75 text-left font-mono text-[11px] text-muted transition-[color,background] hover:bg-white/4 hover:text-text"

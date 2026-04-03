@@ -18,7 +18,20 @@ export const listObjectsQuery = query(
 	async ({ prefix }) => {
 		const { locals } = getRequestEvent();
 		if (!locals.user) error(401, 'Unauthorized');
-		return listObjects(prefix);
+		const pattern = prefix ? `${prefix}%` : '%';
+		const [r2Result, dbFolders] = await Promise.all([
+			listObjects(prefix),
+			Promise.resolve(statements.getFoldersByPrefix.all(pattern))
+		]);
+		const r2Keys = new Set(r2Result.objects.map((o) => o.key));
+		const virtualFolders = dbFolders
+			.filter((f) => {
+				if (r2Keys.has(f.path)) return false;
+				const rel = f.path.slice(prefix.length).replace(/\/$/, '');
+				return rel.length > 0 && !rel.includes('/');
+			})
+			.map((f) => ({ key: f.path, isFolder: true as const }));
+		return { objects: [...r2Result.objects, ...virtualFolders], prefix };
 	}
 );
 

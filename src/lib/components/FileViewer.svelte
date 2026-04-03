@@ -1,6 +1,8 @@
 <script lang="ts">
 	/* eslint-disable svelte/no-navigation-without-resolve */
+	import { untrack } from 'svelte';
 	import { X, ExternalLink, Download, Loader } from 'lucide-svelte';
+	import FileIcon from './FileIcon.svelte';
 	import type { R2Object } from '$lib/r2-server';
 	import { formatFileSize } from '$lib/utils';
 	import { getDownloadUrl } from '$lib/api/r2.remote';
@@ -17,7 +19,7 @@
 	let error = $state('');
 	let textContent = $state('');
 	let downloadUrl = $state('');
-	let abortController = $state<AbortController | null>(null);
+	let abortController: AbortController | null = null;
 
 	const getExt = (key: string) => key.split('.').pop()?.toLowerCase() ?? '';
 
@@ -49,8 +51,8 @@
 		return 'binary';
 	};
 
-	const publicUrl = $derived(() => (obj ? `${r2Url}/${obj.key}` : ''));
-	const fileType = $derived(() => (obj ? getType(obj.key) : 'binary'));
+	const publicUrl = $derived(obj ? `${r2Url}/${obj.key}` : '');
+	const fileType = $derived(obj ? getType(obj.key) : 'binary');
 
 	$effect(() => {
 		if (!obj) {
@@ -63,7 +65,7 @@
 		error = '';
 		downloadUrl = '';
 
-		if (fileType() === 'text') {
+		if (fileType === 'text') {
 			loading = true;
 			abortController?.abort();
 			const ctrl = new AbortController();
@@ -80,8 +82,8 @@
 				.finally(() => {
 					loading = false;
 				});
-		} else if (fileType() === 'binary') {
-			getDownloadUrl({ key: obj.key }).then((r) => {
+		} else if (fileType === 'binary') {
+			untrack(() => getDownloadUrl({ key: obj.key })).then((r) => {
 				downloadUrl = r.url;
 			});
 		}
@@ -101,6 +103,7 @@
 		</div>
 	{:else}
 		<div class="flex h-9 shrink-0 items-center gap-2 border-b border-(--border) px-3">
+			<FileIcon filename={obj.key.split('/').pop() ?? obj.key} size={14} />
 			<span class="flex-1 truncate text-[11px] text-(--text)" title={obj.key}
 				>{obj.key.split('/').pop()}</span
 			>
@@ -109,7 +112,7 @@
 					<span class="mr-1 text-[10px] text-(--muted)">{formatFileSize(obj.size)}</span>
 				{/if}
 				<a
-					href={publicUrl()}
+					href={publicUrl}
 					target="_blank"
 					rel="noopener noreferrer"
 					class="flex cursor-pointer items-center border-none bg-transparent p-1.25 text-(--muted) no-underline transition-colors hover:text-(--text)"
@@ -142,16 +145,16 @@
 				>
 					{error}
 				</div>
-			{:else if fileType() === 'image'}
+			{:else if fileType === 'image'}
 				<div class="flex min-h-25 items-center justify-center p-4">
-					<img src={publicUrl()} alt={obj.key} class="block max-h-100 max-w-full object-contain" />
+					<img src={publicUrl} alt={obj.key} class="block max-h-100 max-w-full object-contain" />
 				</div>
-			{:else if fileType() === 'video'}
+			{:else if fileType === 'video'}
 				<video class="block max-h-100 w-full bg-black" controls>
-					<source src={publicUrl()} />
+					<source src={publicUrl} />
 					<track kind="captions" />
 				</video>
-			{:else if fileType() === 'text'}
+			{:else if fileType === 'text'}
 				<pre
 					class="m-0 p-3 font-mono text-[11px] leading-relaxed break-all whitespace-pre-wrap text-(--text)">{textContent}</pre>
 			{:else}

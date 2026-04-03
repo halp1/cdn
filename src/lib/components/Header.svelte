@@ -2,27 +2,16 @@
 	import { Search, Upload, Key, Link, BarChart2, Rocket, LogOut } from 'lucide-svelte';
 
 	interface Props {
-		currentPath: string;
 		username: string;
 		onSearch: (q: string) => void;
 		onUpload: () => void;
 		rightPanel: string;
 		onTogglePanel: (panel: string) => void;
-		onNavigate: (path: string) => void;
 	}
 
-	let { currentPath, username, onSearch, onUpload, rightPanel, onTogglePanel, onNavigate }: Props = $props();
+	let { username, onSearch, onUpload, rightPanel, onTogglePanel }: Props = $props();
 
 	let searchValue = $state('');
-
-	const breadcrumbs = $derived(() => {
-		if (!currentPath) return [];
-		const parts = currentPath.replace(/\/$/, '').split('/').filter(Boolean);
-		return parts.map((part, i) => ({
-			label: part,
-			path: parts.slice(0, i + 1).join('/') + '/'
-		}));
-	});
 
 	const handleSearch = (e: Event) => {
 		e.preventDefault();
@@ -33,30 +22,11 @@
 <header
 	class="relative z-10 flex h-10 shrink-0 items-center gap-0 border-b border-(--border) bg-(--surface) px-3"
 >
-	<div class="flex min-w-0 flex-1 items-center gap-3">
+	<div class="flex min-w-0 flex-1 items-center">
 		<span
-			class="shrink-0 border-r border-(--border) pr-3 [font-family:var(--font-heading)] text-[14px] tracking-[0.08em] text-(--accent)"
+			class="shrink-0 [font-family:var(--font-heading)] text-[14px] tracking-[0.08em] text-(--accent)"
 			>HALP/CDN</span
 		>
-		<nav
-			class="flex items-center gap-0.5 overflow-hidden text-[11px] text-(--muted)"
-			aria-label="Navigation"
-		>
-			<button
-				class="cursor-pointer border-none bg-transparent px-1 py-0.5 whitespace-nowrap text-(--muted) transition-colors hover:text-(--text) {!currentPath
-					? 'text-(--text)'
-					: ''}"
-				onclick={() => onNavigate('')}>root</button
-			>
-			{#each breadcrumbs() as crumb (crumb.path)}
-				<span class="text-(--border) select-none">/</span>
-				<button
-					class="cursor-pointer border-none bg-transparent px-1 py-0.5 whitespace-nowrap text-(--muted) transition-colors hover:text-(--text)"
-					onclick={() => onNavigate(crumb.path)}
-					>{crumb.label}</button
-				>
-			{/each}
-		</nav>
 	</div>
 
 	<form class="search-wrap relative shrink-0" onsubmit={handleSearch}>

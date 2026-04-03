@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { ChevronRight, ChevronDown, Folder, FolderOpen, File } from 'lucide-svelte';
+	import { ChevronRight, ChevronDown, Folder, FolderOpen } from 'lucide-svelte';
+	import FileIcon from './FileIcon.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
 	interface TreeNode {
@@ -13,11 +14,12 @@
 		objects: { key: string; isFolder: boolean }[];
 		currentPath: string;
 		onNavigate: (path: string) => void;
+		onPreview: (obj: { key: string; isFolder: boolean }) => void;
 		width: number;
 		onResize: (w: number) => void;
 	}
 
-	let { objects, currentPath, onNavigate, width, onResize }: Props = $props();
+	let { objects, currentPath, onNavigate, onPreview, width, onResize }: Props = $props();
 
 	let expanded = $state<SvelteSet<string>>(new SvelteSet());
 
@@ -187,13 +189,22 @@
 							<span class="min-w-0 overflow-hidden text-ellipsis">{node.name}</span>
 						</button>
 					{:else}
-						<div
-							class="flex w-full items-center gap-1.5 overflow-hidden py-1 pr-2 font-mono text-[11px] text-ellipsis whitespace-nowrap text-muted/70"
+						<button
+							class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 text-left font-mono text-[11px] text-ellipsis whitespace-nowrap text-muted/70 transition-colors hover:bg-white/3 hover:text-text"
+							onclick={() => {
+								const parentPath = node.path.includes('/')
+									? node.path.slice(0, node.path.lastIndexOf('/') + 1)
+									: '';
+								onNavigate(parentPath);
+								onPreview(
+									objects.find((o) => o.key === node.path) ?? { key: node.path, isFolder: false }
+								);
+							}}
 						>
 							<span class="w-2.5 shrink-0"></span>
-							<File size={11} class="shrink-0" />
+							<FileIcon filename={node.name} size={12} />
 							<span class="min-w-0 overflow-hidden text-ellipsis">{node.name}</span>
-						</div>
+						</button>
 					{/if}
 					{#if isOpen && node.children.length > 0}
 						{@render renderNodes(node.children, depth + 1)}

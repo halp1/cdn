@@ -8,4 +8,4 @@
 	let { data }: Props = $props();
 </script>
 
-<FileBrowser path="" username={data.user?.username ?? ''} r2Url={data.env?.r2_url ?? ''} />
+<FileBrowser path={data.path} username={data.user?.username ?? ''} r2Url={data.env?.r2_url ?? ''} />
