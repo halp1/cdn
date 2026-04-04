@@ -15,104 +15,104 @@
  *   --dry-run             Print what would be done without writing
  */
 
-import Database from 'better-sqlite3';
-import bcrypt from 'bcryptjs';
-import path from 'path';
-import fs from 'fs';
-import { fileURLToPath } from 'url';
+import Database from "better-sqlite3";
+import bcrypt from "bcryptjs";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, '..');
+const ROOT = path.resolve(__dirname, "..");
 
 const args = process.argv.slice(2);
 const getArg = (flag: string): string | undefined => {
-	const i = args.indexOf(flag);
-	return i !== -1 ? args[i + 1] : undefined;
+  const i = args.indexOf(flag);
+  return i !== -1 ? args[i + 1] : undefined;
 };
 const hasFlag = (flag: string) => args.includes(flag);
 
-const OLD_DB_PATH = getArg('--old-db') ?? path.join(ROOT, 'old', 'data', 'app.db');
-const NEW_DB_PATH = getArg('--new-db') ?? path.join(ROOT, 'data', 'app.db');
-const TEMP_PASSWORD = getArg('--temp-password');
-const DRY_RUN = hasFlag('--dry-run');
+const OLD_DB_PATH = getArg("--old-db") ?? path.join(ROOT, "old", "data", "app.db");
+const NEW_DB_PATH = getArg("--new-db") ?? path.join(ROOT, "data", "app.db");
+const TEMP_PASSWORD = getArg("--temp-password");
+const DRY_RUN = hasFlag("--dry-run");
 
 if (!TEMP_PASSWORD) {
-	console.error(
-		'Error: --temp-password is required (all old password hashes are SHA-256 and cannot be migrated to bcrypt)'
-	);
-	process.exit(1);
+  console.error(
+    "Error: --temp-password is required (all old password hashes are SHA-256 and cannot be migrated to bcrypt)"
+  );
+  process.exit(1);
 }
 
 if (!fs.existsSync(OLD_DB_PATH)) {
-	console.error(`Error: old database not found at ${OLD_DB_PATH}`);
-	process.exit(1);
+  console.error(`Error: old database not found at ${OLD_DB_PATH}`);
+  process.exit(1);
 }
 
 if (!DRY_RUN) {
-	const newDbDir = path.dirname(NEW_DB_PATH);
-	if (!fs.existsSync(newDbDir)) fs.mkdirSync(newDbDir, { recursive: true });
+  const newDbDir = path.dirname(NEW_DB_PATH);
+  if (!fs.existsSync(newDbDir)) fs.mkdirSync(newDbDir, { recursive: true });
 }
 
 console.log(`\nMigration plan:`);
 console.log(`  Old DB: ${OLD_DB_PATH}`);
 console.log(`  New DB: ${NEW_DB_PATH}`);
 console.log(`  Dry run: ${DRY_RUN}`);
-console.log(`  Temp password: ${'*'.repeat(TEMP_PASSWORD.length)}\n`);
+console.log(`  Temp password: ${"*".repeat(TEMP_PASSWORD.length)}\n`);
 
 const oldDb = new Database(OLD_DB_PATH, { readonly: true });
 
 interface OldUser {
-	id: number;
-	username: string;
-	password_hash: string;
+  id: number;
+  username: string;
+  password_hash: string;
 }
 interface OldLink {
-	id: number;
-	token: string;
-	upload_path?: string;
-	target_path?: string;
-	expires_at: number;
-	max_uploads: number;
-	used_count: number;
-	created_at: number;
+  id: number;
+  token: string;
+  upload_path?: string;
+  target_path?: string;
+  expires_at: number;
+  max_uploads: number;
+  used_count: number;
+  created_at: number;
 }
 interface OldExpireTime {
-	id: number;
-	object_key: string;
-	timestamp: number;
+  id: number;
+  object_key: string;
+  timestamp: number;
 }
 interface OldApiKey {
-	id: number;
-	name: string;
-	key: string;
-	permissions: string;
-	scoped_paths: string;
-	created_at: number;
-	last_used_at: number | null;
-	is_active: number;
+  id: number;
+  name: string;
+  key: string;
+  permissions: string;
+  scoped_paths: string;
+  created_at: number;
+  last_used_at: number | null;
+  is_active: number;
 }
 
-const oldUsers = oldDb.prepare('SELECT * FROM users').all() as OldUser[];
+const oldUsers = oldDb.prepare("SELECT * FROM users").all() as OldUser[];
 const oldExpireTimes = (() => {
-	try {
-		return oldDb.prepare('SELECT * FROM expire_times').all() as OldExpireTime[];
-	} catch {
-		return [] as OldExpireTime[];
-	}
+  try {
+    return oldDb.prepare("SELECT * FROM expire_times").all() as OldExpireTime[];
+  } catch {
+    return [] as OldExpireTime[];
+  }
 })();
 const oldApiKeys = (() => {
-	try {
-		return oldDb.prepare('SELECT * FROM api_keys').all() as OldApiKey[];
-	} catch {
-		return [] as OldApiKey[];
-	}
+  try {
+    return oldDb.prepare("SELECT * FROM api_keys").all() as OldApiKey[];
+  } catch {
+    return [] as OldApiKey[];
+  }
 })();
 const oldLinks = (() => {
-	try {
-		return oldDb.prepare('SELECT * FROM one_time_links').all() as OldLink[];
-	} catch {
-		return [] as OldLink[];
-	}
+  try {
+    return oldDb.prepare("SELECT * FROM one_time_links").all() as OldLink[];
+  } catch {
+    return [] as OldLink[];
+  }
 })();
 
 oldDb.close();
@@ -124,18 +124,18 @@ console.log(`  Expire times: ${oldExpireTimes.length}`);
 console.log(`  API keys:     ${oldApiKeys.length}\n`);
 
 if (DRY_RUN) {
-	console.log('Dry run complete. No changes written.');
-	process.exit(0);
+  console.log("Dry run complete. No changes written.");
+  process.exit(0);
 }
 
 if (fs.existsSync(NEW_DB_PATH)) {
-	const backup = NEW_DB_PATH + '.bak.' + Date.now();
-	fs.copyFileSync(NEW_DB_PATH, backup);
-	console.log(`Backed up existing new DB to: ${backup}`);
+  const backup = NEW_DB_PATH + ".bak." + Date.now();
+  fs.copyFileSync(NEW_DB_PATH, backup);
+  console.log(`Backed up existing new DB to: ${backup}`);
 }
 
 const newDb = new Database(NEW_DB_PATH);
-newDb.pragma('journal_mode = WAL');
+newDb.pragma("journal_mode = WAL");
 
 newDb.exec(`
 	CREATE TABLE IF NOT EXISTS users (
@@ -188,66 +188,66 @@ newDb.exec(`
 `);
 
 const insertUser = newDb.prepare(
-	'INSERT OR IGNORE INTO users (id, username, password_hash) VALUES (?, ?, ?)'
+  "INSERT OR IGNORE INTO users (id, username, password_hash) VALUES (?, ?, ?)"
 );
 const insertLink = newDb.prepare(`
 	INSERT OR IGNORE INTO one_time_links (id, token, upload_path, expires_at, max_uploads, used_count, created_at)
 	VALUES (?, ?, ?, ?, ?, ?, ?)
 `);
 const insertExpire = newDb.prepare(
-	'INSERT OR IGNORE INTO expire_times (id, object_key, timestamp) VALUES (?, ?, ?)'
+  "INSERT OR IGNORE INTO expire_times (id, object_key, timestamp) VALUES (?, ?, ?)"
 );
 const insertApiKey = newDb.prepare(`
 	INSERT OR IGNORE INTO api_keys (id, name, key, permissions, scoped_paths, created_at, last_used_at, is_active)
 	VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `);
 
-console.log('Hashing passwords (bcrypt cost 12)…');
+console.log("Hashing passwords (bcrypt cost 12)…");
 const migrate = newDb.transaction(() => {
-	for (const user of oldUsers) {
-		const hash = bcrypt.hashSync(TEMP_PASSWORD, 12);
-		insertUser.run(user.id, user.username, hash);
-		console.log(`  Migrated user: ${user.username}`);
-	}
+  for (const user of oldUsers) {
+    const hash = bcrypt.hashSync(TEMP_PASSWORD, 12);
+    insertUser.run(user.id, user.username, hash);
+    console.log(`  Migrated user: ${user.username}`);
+  }
 
-	const now = Math.floor(Date.now() / 1000);
-	let linkCount = 0;
-	for (const link of oldLinks) {
-		const uploadPath = link.upload_path ?? link.target_path ?? '';
-		if (link.expires_at <= now) continue;
-		insertLink.run(
-			link.id,
-			link.token,
-			uploadPath,
-			link.expires_at,
-			link.max_uploads ?? 1,
-			link.used_count ?? 0,
-			link.created_at ?? now
-		);
-		linkCount++;
-	}
-	console.log(
-		`  Migrated ${linkCount} active upload links (${oldLinks.length - linkCount} expired, skipped)`
-	);
+  const now = Math.floor(Date.now() / 1000);
+  let linkCount = 0;
+  for (const link of oldLinks) {
+    const uploadPath = link.upload_path ?? link.target_path ?? "";
+    if (link.expires_at <= now) continue;
+    insertLink.run(
+      link.id,
+      link.token,
+      uploadPath,
+      link.expires_at,
+      link.max_uploads ?? 1,
+      link.used_count ?? 0,
+      link.created_at ?? now
+    );
+    linkCount++;
+  }
+  console.log(
+    `  Migrated ${linkCount} active upload links (${oldLinks.length - linkCount} expired, skipped)`
+  );
 
-	for (const et of oldExpireTimes) {
-		insertExpire.run(et.id, et.object_key, et.timestamp);
-	}
-	console.log(`  Migrated ${oldExpireTimes.length} expire times`);
+  for (const et of oldExpireTimes) {
+    insertExpire.run(et.id, et.object_key, et.timestamp);
+  }
+  console.log(`  Migrated ${oldExpireTimes.length} expire times`);
 
-	for (const ak of oldApiKeys) {
-		insertApiKey.run(
-			ak.id,
-			ak.name,
-			ak.key,
-			ak.permissions,
-			ak.scoped_paths,
-			ak.created_at ?? now,
-			ak.last_used_at,
-			ak.is_active
-		);
-	}
-	console.log(`  Migrated ${oldApiKeys.length} API keys`);
+  for (const ak of oldApiKeys) {
+    insertApiKey.run(
+      ak.id,
+      ak.name,
+      ak.key,
+      ak.permissions,
+      ak.scoped_paths,
+      ak.created_at ?? now,
+      ak.last_used_at,
+      ak.is_active
+    );
+  }
+  console.log(`  Migrated ${oldApiKeys.length} API keys`);
 });
 
 migrate();

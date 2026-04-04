@@ -1,6 +1,6 @@
 ---
-description: 'Use when writing any part of the CDN application — routes, components, lib utilities, API, DB. Covers architecture, stack, patterns, and feature requirements for the rewrite of the old CDN app.'
-applyTo: 'src/**'
+description: "Use when writing any part of the CDN application — routes, components, lib utilities, API, DB. Covers architecture, stack, patterns, and feature requirements for the rewrite of the old CDN app."
+applyTo: "src/**"
 ---
 
 # CDN App — Rewrite Instructions

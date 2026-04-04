@@ -1,10 +1,16 @@
-import { redirect, error } from '@sveltejs/kit';
-import { R2_URL } from '$env/static/private';
-import type { RequestHandler } from './$types';
+import { redirect, error } from "@sveltejs/kit";
+import { statements } from "$lib/db";
+import { generateDownloadUrl } from "$lib/r2-server";
+import type { RequestHandler } from "./$types";
 
-export const GET: RequestHandler = ({ params }) => {
-	const { path } = params;
-	if (!path) error(400, 'No path specified');
-	const r2Url = R2_URL.endsWith('/') ? R2_URL : R2_URL + '/';
-	redirect(302, `${r2Url}${path}`);
+export const GET: RequestHandler = async ({ params }) => {
+  const { path } = params;
+  if (!path) error(400, "No path specified");
+
+  const file = statements.getFileByPath.get(path);
+  if (!file) error(404, "File not found");
+
+  const filename = path.split("/").pop() ?? path;
+  const url = await generateDownloadUrl(file.id, file.extension, filename);
+  redirect(302, url);
 };
