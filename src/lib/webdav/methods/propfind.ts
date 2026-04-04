@@ -12,6 +12,26 @@ import { isDirectChild, isDirectChildFolder, rootHref, toHref } from "../path";
 
 const now = (): Date => new Date();
 
+const deriveVirtualFolders = (allFiles: FileRecord[], parentLogical: string): string[] => {
+  const seen = new Set<string>();
+  for (const file of allFiles) {
+    let relative: string;
+    if (parentLogical === "") {
+      relative = file.path;
+    } else {
+      if (!file.path.startsWith(parentLogical + "/")) continue;
+      relative = file.path.slice(parentLogical.length + 1);
+    }
+    const slashIdx = relative.indexOf("/");
+    if (slashIdx !== -1) {
+      const segment = relative.slice(0, slashIdx);
+      const folderPath = parentLogical === "" ? segment : `${parentLogical}/${segment}`;
+      seen.add(folderPath);
+    }
+  }
+  return [...seen];
+};
+
 const fileToProp = (file: FileRecord): DavProp => ({
   displayname: file.path.split("/").pop() ?? file.path,
   contenttype: file.content_type || "application/octet-stream",
@@ -51,11 +71,17 @@ export const handlePropfind = (logicalPath: string, depthHeader: string | null):
           responses.push(buildResponse(toHref(file.path, false), fileToProp(file)));
         }
       }
-      for (const folder of allFolders) {
-        if (isDirectChildFolder("", folder.path)) {
-          responses.push(
-            buildResponse(toHref(folder.path, true), folderToProp(folder.path, folder.created_at))
-          );
+
+      const explicitFolderPaths = new Set(allFolders.map((f) => f.path));
+      const folderMap = new Map(allFolders.map((f) => [f.path, f]));
+
+      const virtualFolders = deriveVirtualFolders(allFiles, "");
+      const allFolderPaths = new Set([...explicitFolderPaths, ...virtualFolders]);
+
+      for (const fp of allFolderPaths) {
+        if (isDirectChildFolder("", fp)) {
+          const explicit = folderMap.get(fp);
+          responses.push(buildResponse(toHref(fp, true), folderToProp(fp, explicit?.created_at)));
         }
       }
     }
@@ -72,26 +98,35 @@ export const handlePropfind = (logicalPath: string, depthHeader: string | null):
   const folders = statements.getFoldersByPrefix.all(logicalPath + "%") as Folder[];
   const exactFolder = folders.find((f) => f.path === logicalPath);
 
-  if (!exactFolder) {
+  const allFilesForFolder = statements.getAllFiles.all() as FileRecord[];
+  const hasFilesUnder = allFilesForFolder.some(
+    (f) => f.path === logicalPath || f.path.startsWith(logicalPath + "/")
+  );
+
+  if (!exactFolder && !hasFilesUnder) {
     return new Response("Not Found", { status: 404 });
   }
 
   const responses: string[] = [
-    buildResponse(toHref(logicalPath, true), folderToProp(logicalPath, exactFolder.created_at))
+    buildResponse(toHref(logicalPath, true), folderToProp(logicalPath, exactFolder?.created_at))
   ];
 
   if (depth === 1) {
-    const allFiles = statements.getAllFiles.all() as FileRecord[];
-    for (const f of allFiles) {
+    for (const f of allFilesForFolder) {
       if (isDirectChild(logicalPath, f.path)) {
         responses.push(buildResponse(toHref(f.path, false), fileToProp(f)));
       }
     }
-    for (const folder of folders) {
-      if (folder.path !== logicalPath && isDirectChildFolder(logicalPath, folder.path)) {
-        responses.push(
-          buildResponse(toHref(folder.path, true), folderToProp(folder.path, folder.created_at))
-        );
+
+    const explicitFolderPaths = new Set(folders.map((f) => f.path));
+    const folderMap = new Map(folders.map((f) => [f.path, f]));
+    const virtualFolders = deriveVirtualFolders(allFilesForFolder, logicalPath);
+    const allFolderPaths = new Set([...explicitFolderPaths, ...virtualFolders]);
+
+    for (const fp of allFolderPaths) {
+      if (fp !== logicalPath && isDirectChildFolder(logicalPath, fp)) {
+        const explicit = folderMap.get(fp);
+        responses.push(buildResponse(toHref(fp, true), folderToProp(fp, explicit?.created_at)));
       }
     }
   }
