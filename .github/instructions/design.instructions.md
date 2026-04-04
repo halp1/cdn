@@ -1,6 +1,6 @@
 ---
-description: 'Use when writing any UI, styling, or Svelte component for the CDN app. Defines the exact design language: colors, fonts, spacing, and component patterns.'
-applyTo: 'src/**'
+description: "Use when writing any UI, styling, or Svelte component for the CDN app. Defines the exact design language: colors, fonts, spacing, and component patterns."
+applyTo: "src/**"
 ---
 
 # Design Theme
@@ -11,8 +11,8 @@ Load both fonts from Google Fonts in `src/app.html` inside `<head>`:
 
 ```html
 <link
-	href="https://fonts.googleapis.com/css2?family=Anta&family=DM+Mono:wght@300;400;500&display=swap"
-	rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Anta&family=DM+Mono:wght@300;400;500&display=swap"
+  rel="stylesheet"
 />
 ```
 
@@ -27,13 +27,13 @@ Define these as CSS custom properties in `src/routes/layout.css`:
 
 ```css
 :root {
-	--bg: #0e0e0e;
-	--surface: #161616;
-	--border: #2a2a2a;
-	--accent: #c8f56a;
-	--text: #f0ede6;
-	--muted: #666666;
-	--input-bg: #111111;
+  --bg: #0e0e0e;
+  --surface: #161616;
+  --border: #2a2a2a;
+  --accent: #c8f56a;
+  --text: #f0ede6;
+  --muted: #666666;
+  --input-bg: #111111;
 }
 ```
 
@@ -47,7 +47,7 @@ Define these as CSS custom properties in `src/routes/layout.css`:
 | `--muted`    | `#666666` | Secondary labels, placeholder text                         |
 | `--input-bg` | `#111111` | Form input backgrounds                                     |
 
-In Tailwind, reference these as `bg-[var(--bg)]`, `text-[var(--accent)]`, etc.
+In Tailwind, reference these as `bg-bg`, `bg-surface`, `border-border`, `text-accent`, `text-muted`, etc.
 
 ## Global Background
 
@@ -55,21 +55,21 @@ Apply a subtle grid texture to the page body in `layout.css`:
 
 ```css
 body {
-	background: var(--bg);
-	color: var(--text);
-	font-family: 'DM Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "DM Mono", monospace;
 }
 
 body::before {
-	content: '';
-	position: fixed;
-	inset: 0;
-	background-image:
-		linear-gradient(rgba(200, 245, 106, 0.03) 1px, transparent 1px),
-		linear-gradient(90deg, rgba(200, 245, 106, 0.03) 1px, transparent 1px);
-	background-size: 40px 40px;
-	pointer-events: none;
-	z-index: 0;
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(200, 245, 106, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200, 245, 106, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
 }
 ```
 
@@ -87,14 +87,14 @@ Cards and key UI panels use a top-right corner accent in the lime color:
 
 ```css
 .card::before {
-	content: '';
-	position: absolute;
-	top: -1px;
-	right: -1px;
-	width: 32px;
-	height: 32px;
-	border-top: 2px solid var(--accent);
-	border-right: 2px solid var(--accent);
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 32px;
+  height: 32px;
+  border-top: 2px solid var(--accent);
+  border-right: 2px solid var(--accent);
 }
 ```
 
@@ -129,21 +129,21 @@ All form labels and section tags:
 input,
 select,
 textarea {
-	background: var(--input-bg);
-	border: 1px solid var(--border);
-	color: var(--text);
-	font-family: 'DM Mono', monospace;
-	font-size: 14px;
-	padding: 12px 14px;
-	outline: none;
-	transition: border-color 0.2s;
-	border-radius: 0;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: "DM Mono", monospace;
+  font-size: 14px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  border-radius: 0;
 }
 input:focus {
-	border-color: var(--accent);
+  border-color: var(--accent);
 }
 input::placeholder {
-	color: #333;
+  color: #333;
 }
 ```
 
@@ -151,26 +151,26 @@ input::placeholder {
 
 ```css
 button.primary {
-	background: var(--accent);
-	color: #0e0e0e;
-	border: none;
-	font-family: 'DM Mono', monospace;
-	font-size: 12px;
-	font-weight: 500;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	padding: 14px 20px;
-	cursor: pointer;
-	transition:
-		opacity 0.2s,
-		transform 0.1s;
-	border-radius: 0;
+  background: var(--accent);
+  color: #0e0e0e;
+  border: none;
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 14px 20px;
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    transform 0.1s;
+  border-radius: 0;
 }
 button.primary:hover {
-	opacity: 0.88;
+  opacity: 0.88;
 }
 button.primary:active {
-	transform: scale(0.99);
+  transform: scale(0.99);
 }
 ```
 
@@ -178,24 +178,24 @@ button.primary:active {
 
 ```css
 button.ghost {
-	background: transparent;
-	color: var(--text);
-	border: 1px solid var(--border);
-	font-family: 'DM Mono', monospace;
-	font-size: 12px;
-	font-weight: 500;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	padding: 12px 18px;
-	cursor: pointer;
-	transition:
-		border-color 0.2s,
-		color 0.2s;
-	border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    color 0.2s;
+  border-radius: 0;
 }
 button.ghost:hover {
-	border-color: var(--accent);
-	color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 ```
 
@@ -207,18 +207,18 @@ button.ghost:hover {
 
 ```css
 .divider {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	color: var(--border);
-	font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--border);
+  font-size: 11px;
 }
 .divider::before,
 .divider::after {
-	content: '';
-	flex: 1;
-	height: 1px;
-	background: var(--border);
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
 }
 ```
 
@@ -230,17 +230,17 @@ Panels and cards fade up on mount:
 
 ```css
 @keyframes fadeUp {
-	from {
-		opacity: 0;
-		transform: translateY(16px);
-	}
-	to {
-		opacity: 1;
-		transform: translateY(0);
-	}
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .card {
-	animation: fadeUp 0.5s ease both;
+  animation: fadeUp 0.5s ease both;
 }
 ```
 
@@ -250,13 +250,13 @@ For lists of files, keys, or links:
 
 ```css
 .list-item {
-	animation: fadeUp 0.3s ease both;
+  animation: fadeUp 0.3s ease both;
 }
 .list-item:nth-child(1) {
-	animation-delay: 0ms;
+  animation-delay: 0ms;
 }
 .list-item:nth-child(2) {
-	animation-delay: 40ms;
+  animation-delay: 40ms;
 }
 /* etc. — cap delay at ~200ms */
 ```
@@ -271,9 +271,9 @@ For lists of files, keys, or links:
 
 Use Tailwind utility classes wherever possible. For design tokens, use the CSS variable approach with arbitrary values:
 
-- `bg-[var(--bg)]`, `bg-[var(--surface)]`
-- `border-[var(--border)]`
-- `text-[var(--accent)]`, `text-[var(--muted)]`
+- `bg-bg`, `bg-surface`
+- `border-border`
+- `text-accent`, `text-muted`
 - `font-mono` for DM Mono
 - `tracking-widest` / `uppercase` for labels and buttons
 

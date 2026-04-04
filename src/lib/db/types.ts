@@ -1,61 +1,74 @@
 export interface User {
-	id: number;
-	username: string;
-	password_hash: string;
+  id: number;
+  username: string;
+  password_hash: string;
 }
 
 export interface Folder {
-	id: number;
-	path: string;
-	created_at: number;
+  id: number;
+  path: string;
+  created_at: number;
 }
 
 export interface OneTimeLink {
-	id: number;
-	token: string;
-	upload_path: string;
-	expires_at: number;
-	max_uploads: number;
-	used_count: number;
-	created_at: number;
+  id: number;
+  token: string;
+  upload_path: string;
+  expires_at: number;
+  max_uploads: number;
+  used_count: number;
+  created_at: number;
 }
 
 export interface ExpireTime {
-	id: number;
-	object_key: string;
-	timestamp: number;
+  id: number;
+  object_key: string;
+  timestamp: number;
 }
 
-export type ApiKeyPermission = 'read' | 'write' | 'delete' | 'list';
+export type ApiKeyPermission = "read" | "write" | "delete" | "list";
 
 export interface ApiKeyRow {
-	id: number;
-	name: string;
-	key: string;
-	permissions: string;
-	scoped_paths: string;
-	created_at: number;
-	last_used_at: number | null;
-	is_active: number;
+  id: number;
+  name: string;
+  key: string;
+  permissions: string;
+  scoped_paths: string;
+  created_at: number;
+  last_used_at: number | null;
+  is_active: number;
 }
 
 export interface ApiKey {
-	id: number;
-	name: string;
-	key: string;
-	permissions: ApiKeyPermission[];
-	scoped_paths: string[];
-	created_at: number;
-	last_used_at: number | null;
-	is_active: boolean;
+  id: number;
+  name: string;
+  key: string;
+  permissions: ApiKeyPermission[];
+  scoped_paths: string[];
+  created_at: number;
+  last_used_at: number | null;
+  is_active: boolean;
 }
 
 export interface ApiKeyCreate {
-	name: string;
-	permissions: ApiKeyPermission[];
-	scopedPaths: string[];
+  name: string;
+  permissions: ApiKeyPermission[];
+  scopedPaths: string[];
+}
+
+export interface FileRecord {
+  id: string;
+  path: string;
+  extension: string;
+  size: number;
+  content_type: string;
+  created_at: number;
+}
+
+export interface SumRow {
+  size: number;
 }
 
 export interface CountRow {
-	count: number;
+  count: number;
 }

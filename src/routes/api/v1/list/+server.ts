@@ -1,18 +1,25 @@
-import { json } from '@sveltejs/kit';
-import { extractApiKeyFromHeader, validateApiKeyAccess } from '$lib/api-keys';
-import { listObjectsInBucket } from '$lib/r2-server';
-import type { RequestHandler } from '@sveltejs/kit';
+import { json } from "@sveltejs/kit";
+import { extractApiKeyFromHeader, validateApiKeyAccess } from "$lib/api-keys";
+import { statements } from "$lib/db";
+import type { RequestHandler } from "@sveltejs/kit";
 
 export const GET: RequestHandler = async ({ request, url }) => {
-	const apiKey = extractApiKeyFromHeader(request.headers.get('authorization'));
-	if (!apiKey) return json({ error: 'API key required' }, { status: 401 });
+  const apiKey = extractApiKeyFromHeader(request.headers.get("authorization"));
+  if (!apiKey) return json({ error: "API key required" }, { status: 401 });
 
-	const path = url.searchParams.get('path') ?? '/';
-	const limit = Math.min(parseInt(url.searchParams.get('limit') ?? '100'), 1000);
+  const path = url.searchParams.get("path") ?? "";
+  const limit = Math.min(parseInt(url.searchParams.get("limit") ?? "100"), 1000);
 
-	const validation = validateApiKeyAccess(apiKey, 'list', path);
-	if (!validation.valid) return json({ error: validation.error }, { status: 403 });
+  const normalizedPath = path === "/" ? "" : path.replace(/^\//, "");
+  const validation = validateApiKeyAccess(apiKey, "list", normalizedPath || "/");
+  if (!validation.valid) return json({ error: validation.error }, { status: 403 });
 
-	const objects = await listObjectsInBucket(path, limit);
-	return json({ success: true, path, objects, count: objects.length });
+  const files = statements.getFilesInFolder.all(normalizedPath).slice(0, limit);
+  const objects = files.map((f) => ({
+    key: f.path,
+    size: f.size,
+    contentType: f.content_type,
+    createdAt: f.created_at
+  }));
+  return json({ success: true, path: normalizedPath, objects, count: objects.length });
 };
