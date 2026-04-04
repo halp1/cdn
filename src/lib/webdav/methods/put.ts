@@ -44,7 +44,7 @@ export const handlePut = async (logicalPath: string, request: Request): Promise<
         ContentType: contentType
       })
     );
-  } catch (err) {
+  } catch {
     if (!existing) {
       statements.deleteFileByPath.run(finalPath);
     }
