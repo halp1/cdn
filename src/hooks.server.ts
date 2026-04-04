@@ -1,8 +1,13 @@
 import { jwt } from "$lib/jwt";
 import { statements } from "$lib/db";
+import { handleWebDAV } from "$lib/webdav/handler";
 import type { Handle } from "@sveltejs/kit";
 
 export const handle: Handle = async ({ event, resolve }) => {
+  if (event.url.pathname.startsWith("/webdav")) {
+    return handleWebDAV(event.request, event.url);
+  }
+
   event.locals.user = null;
   const token = event.cookies.get("token");
   if (token) {
