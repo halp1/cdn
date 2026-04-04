@@ -2,7 +2,7 @@ import { error, redirect } from "@sveltejs/kit";
 import { statements } from "$lib/db";
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ params, locals }) => {
+export const load: PageServerLoad = async ({ params }) => {
   const { token } = params;
   if (!token) error(400, "Invalid upload link");
 
