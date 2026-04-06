@@ -4,6 +4,7 @@
   import FileIcon from "./FileIcon.svelte";
   import type { R2Object } from "$lib/r2-server";
   import { formatFileSize } from "$lib/utils";
+  import { tooltip } from "$lib/tooltip";
   interface Props {
     obj: R2Object | null;
     onClose: () => void;
@@ -96,7 +97,7 @@
   {:else}
     <div class="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
       <FileIcon filename={obj.key.split("/").pop() ?? obj.key} size={14} />
-      <span class="flex-1 truncate text-sm text-text" title={obj.key}
+      <span class="flex-1 truncate text-sm text-text" use:tooltip={obj.key}
         >{obj.key.split("/").pop()}</span
       >
       <div class="flex shrink-0 items-center gap-0.5">
@@ -108,14 +109,14 @@
           target="_blank"
           rel="noopener noreferrer"
           class="flex cursor-pointer items-center border-none bg-transparent p-1.25 text-muted no-underline transition-colors hover:text-text"
-          title="Open in new tab"
+          use:tooltip={"Open in new tab"}
         >
           <ExternalLink size={13} />
         </a>
         <button
           class="flex cursor-pointer items-center border-none bg-transparent p-1.25 text-muted transition-colors hover:text-text"
           onclick={onClose}
-          title="Close"
+          use:tooltip={"Close"}
         >
           <X size={13} />
         </button>

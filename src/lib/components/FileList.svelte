@@ -17,6 +17,7 @@
   import { formatFileSize, collectDroppedFiles, type DroppedFile } from "$lib/utils";
   import type { R2Object } from "$lib/r2-server";
   import { SvelteMap } from "svelte/reactivity";
+  import { tooltip } from "$lib/tooltip";
 
   interface Props {
     objects: R2Object[];
@@ -460,7 +461,7 @@
                 e.stopPropagation();
                 handleContextMenu(e, obj.key);
               }}
-              title="More actions"
+              use:tooltip={"More actions"}
             >
               <Ellipsis size={12} />
             </button>

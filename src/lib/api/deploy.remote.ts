@@ -1,11 +1,15 @@
-import { command, getRequestEvent } from "$app/server";
+import { query, getRequestEvent } from "$app/server";
 import { error } from "@sveltejs/kit";
-import { spawn } from "child_process";
+import { execSync } from "child_process";
 
-export const deployCommand = command(async () => {
+export const getCurrentCommitQuery = query(async () => {
   const { locals } = getRequestEvent();
   if (!locals.user) error(401, "Unauthorized");
-  const child = spawn("bash", ["prod.sh"], { detached: true, stdio: "ignore" });
-  child.unref();
-  return { success: true };
+  try {
+    const hash = execSync("git rev-parse --short HEAD", { stdio: "pipe" }).toString().trim();
+    const message = execSync("git log -1 --format=%s", { stdio: "pipe" }).toString().trim();
+    return { hash, message };
+  } catch {
+    return { hash: "", message: "" };
+  }
 });
