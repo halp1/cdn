@@ -68,23 +68,23 @@
   };
 </script>
 
-<div class="relative z-[1] flex min-h-screen items-center justify-center p-6">
+<div class="relative z-1 flex min-h-screen items-center justify-center p-6">
   <div
-    class="card relative w-full max-w-[420px] animate-[fadeUp_0.5s_ease_both] border border-border bg-surface px-10 py-12"
+    class="card relative w-full max-w-105 animate-[fadeUp_0.5s_ease_both] border border-border bg-surface px-10 py-12"
   >
     <p class="mb-5 text-xs tracking-[0.18em] text-accent uppercase">Secure upload</p>
     <h1 class="font-heading mb-6 text-5xl text-text">Upload file.</h1>
 
     <div class="mb-7 flex flex-wrap gap-3 border-b border-border pb-5">
-      <span class="flex flex-col gap-[3px]">
+      <span class="flex flex-col gap-0.75">
         <span class="text-xs tracking-[0.16em] text-muted uppercase">Path</span>
         <code class="font-mono text-sm text-text">{data.targetPath}</code>
       </span>
-      <span class="flex flex-col gap-[3px]">
+      <span class="flex flex-col gap-0.75">
         <span class="text-xs tracking-[0.16em] text-muted uppercase">Remaining</span>
         <span class="font-mono text-sm text-text">{remainingUploads} / {data.maxUploads}</span>
       </span>
-      <span class="flex flex-col gap-[3px]">
+      <span class="flex flex-col gap-0.75">
         <span class="text-xs tracking-[0.16em] text-muted uppercase">Expires in</span>
         <span class="font-mono text-sm text-accent">{formatExpiry(data.expiresAt)}</span>
       </span>
@@ -96,7 +96,7 @@
         <span>Upload complete!</span>
         {#if remainingUploads > 0}
           <button
-            class="mt-2 cursor-pointer border border-border bg-transparent px-4 py-2 font-mono text-xs tracking-[0.1em] text-muted uppercase transition-all hover:border-accent hover:text-accent"
+            class="mt-2 cursor-pointer border border-border bg-transparent px-4 py-2 font-mono text-xs tracking-widest text-muted uppercase transition-all hover:border-accent hover:text-accent"
             style="border-radius:0"
             onclick={() => {
               done = false;
@@ -109,10 +109,9 @@
         {/if}
       </div>
     {:else}
-      <!-- svelte-ignore a11y_interactive_supports_focus -->
       <div
-        class="justify-content-center mb-5 flex cursor-pointer flex-col items-center gap-2.5 border border-dashed px-5 py-9 text-sm text-muted transition-[border-color,background] hover:border-accent hover:bg-accent/[0.04] {dropActive
-          ? 'border-accent bg-accent/[0.04]'
+        class="justify-content-center mb-5 flex cursor-pointer flex-col items-center gap-2.5 border border-dashed px-5 py-9 text-sm text-muted transition-[border-color,background] hover:border-accent hover:bg-accent/4 {dropActive
+          ? 'border-accent bg-accent/4'
           : 'border-border'} {files && files.length > 0 ? 'border-solid border-accent' : ''}"
         role="button"
         tabindex="0"
@@ -158,7 +157,7 @@
       {/if}
 
       {#if uploading}
-        <div class="mb-2 h-[2px] bg-border">
+        <div class="mb-2 h-0.5 bg-border">
           <div
             class="h-full bg-accent transition-[width_0.1s_ease]"
             style="width: {progress}%"
@@ -168,7 +167,7 @@
       {/if}
 
       <button
-        class="flex w-full cursor-pointer items-center justify-center gap-2 border-none bg-accent py-3.5 font-mono text-sm font-medium tracking-[0.12em] text-[#0e0e0e] uppercase transition-opacity hover:opacity-[0.88] disabled:cursor-not-allowed disabled:opacity-40"
+        class="flex w-full cursor-pointer items-center justify-center gap-2 border-none bg-accent py-3.5 font-mono text-sm font-medium tracking-[0.12em] text-bg uppercase transition-opacity hover:opacity-[0.88] disabled:cursor-not-allowed disabled:opacity-40"
         style="border-radius:0"
         disabled={!files || uploading}
         onclick={upload}
