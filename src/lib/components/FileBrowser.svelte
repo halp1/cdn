@@ -9,6 +9,7 @@
   import RightPanel from "$lib/components/RightPanel.svelte";
   import NewFolderModal from "$lib/components/NewFolderModal.svelte";
   import DeleteModal from "$lib/components/DeleteModal.svelte";
+  import DeployPanel from "$lib/components/DeployPanel.svelte";
   import KeyboardManager, { type KeyBind } from "$lib/components/KeyboardManager.svelte";
   import FileSearchModal from "$lib/components/FileSearchModal.svelte";
   import {
@@ -26,6 +27,7 @@
   import { sanitizeFilename } from "$lib/filename-utils";
   import { notifications } from "$lib/notifications.svelte";
   import { collectDroppedFiles, type DroppedFile } from "$lib/utils";
+  import { tooltip } from "$lib/tooltip";
 
   interface Props {
     path: string;
@@ -38,7 +40,7 @@
   let isSearchModalOpen = $state(false);
   let searchModalQuery = $state("");
 
-  type RightPanelMode = "upload-links" | "api-keys" | "stats" | "preview" | null;
+  type RightPanelMode = "upload-links" | "api-keys" | "stats" | "preview" | "deploy" | null;
   let rightPanel = $state<RightPanelMode>(null);
 
   let treeWidth = $state(220);
@@ -536,7 +538,7 @@
             <button
               class="flex cursor-pointer items-center gap-1.25 border border-[#ff6b6b]/40 bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-[#ff6b6b] uppercase transition-[color,border-color,background] hover:border-[#ff6b6b]"
               onclick={() => handleDelete([...selected])}
-              title="Delete selected"
+              use:tooltip={"Delete selected"}
             >
               <Trash2 size={13} />
               <span>Delete {selected.size}</span>
@@ -545,7 +547,7 @@
           <button
             class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-muted uppercase transition-[color,border-color,background] hover:border-muted hover:bg-white/3 hover:text-text"
             onclick={handleNewFolder}
-            title="New folder"
+            use:tooltip={"New folder"}
           >
             <FolderPlus size={13} />
             <span>New folder</span>
@@ -553,7 +555,7 @@
           <button
             class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-muted uppercase transition-[color,border-color,background] hover:border-muted hover:bg-white/3 hover:text-text"
             onclick={handleUpload}
-            title="Upload"
+            use:tooltip={"Upload"}
           >
             <Upload size={13} />
             <span>Upload</span>
@@ -595,9 +597,19 @@
       </div>
     </main>
 
-    {#if rightPanel && rightPanel !== "preview"}
+    {#if rightPanel && rightPanel !== "preview" && rightPanel !== "deploy"}
       <RightPanel
         panel={rightPanel}
+        onClose={() => {
+          rightPanel = null;
+        }}
+        width={rightWidth}
+        onResize={(w) => {
+          rightRatio = w / (windowWidth - treeWidth);
+        }}
+      />
+    {:else if rightPanel === "deploy"}
+      <DeployPanel
         onClose={() => {
           rightPanel = null;
         }}

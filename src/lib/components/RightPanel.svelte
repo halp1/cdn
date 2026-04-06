@@ -5,6 +5,7 @@
   import { getStorageStatsQuery } from "$lib/api/r2.remote";
   import { formatFileSize } from "$lib/utils";
   import type { ApiKeyPermission } from "$lib/db/types";
+  import { tooltip } from "$lib/tooltip";
 
   type Panel = "upload-links" | "api-keys" | "stats";
 
@@ -237,14 +238,14 @@
                 <button
                   class="flex cursor-pointer items-center border-0 bg-transparent p-1.25 text-muted transition-colors hover:text-text"
                   onclick={() => copyLink(link.token)}
-                  title="Copy link"
+                  use:tooltip={"Copy link"}
                 >
                   {#if copiedToken === link.token}<Check size={12} />{:else}<Copy size={12} />{/if}
                 </button>
                 <button
                   class="flex cursor-pointer items-center border-0 bg-transparent p-1.25 text-muted transition-colors hover:text-[#ff6b6b]"
                   onclick={() => deleteUploadLink({ token: link.token })}
-                  title="Delete"
+                  use:tooltip={"Delete"}
                 >
                   <Trash2 size={12} />
                 </button>
@@ -391,7 +392,7 @@
                 <button
                   class="flex cursor-pointer items-center border-0 bg-transparent p-1.25 text-muted transition-colors hover:text-[#ff6b6b]"
                   onclick={() => deleteApiKeyCommand({ id: key.id, permanent: true })}
-                  title="Delete permanently"
+                  use:tooltip={"Delete permanently"}
                 >
                   <Trash2 size={12} />
                 </button>

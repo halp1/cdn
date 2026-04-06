@@ -3,6 +3,8 @@
   import { Search, Upload, Key, Link, Rocket, LogOut } from "@lucide/svelte";
   import { getStorageStatsQuery } from "$lib/api/r2.remote";
   import { formatFileSize } from "$lib/utils";
+  import { tooltip } from "$lib/tooltip";
+  import { getCurrentCommitQuery } from "$lib/api/deploy.remote";
 
   interface Props {
     username: string;
@@ -15,6 +17,11 @@
   let { username, onOpenSearchModal, onUpload, rightPanel, onTogglePanel }: Props = $props();
 
   const statsPromise = getStorageStatsQuery();
+
+  let deployTooltip = $state("Deploy");
+  getCurrentCommitQuery().then(({ hash, message }) => {
+    if (hash) deployTooltip = `Deploy — ${hash}${message ? ` ${message}` : ""}`;
+  });
 </script>
 
 <header
@@ -50,7 +57,7 @@
   <div class="ml-3 flex shrink-0 items-center gap-0.5">
     <button
       class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 text-muted transition-colors hover:bg-white/4 hover:text-text"
-      title="Upload"
+      use:tooltip={"Upload"}
       onclick={onUpload}
     >
       <Upload size={14} />
@@ -61,7 +68,7 @@
       'upload-links'
         ? 'text-accent'
         : 'text-muted'}"
-      title="Upload Links"
+      use:tooltip={"Upload Links"}
       onclick={() => onTogglePanel("upload-links")}
     >
       <Link size={14} />
@@ -71,7 +78,7 @@
       'api-keys'
         ? 'text-accent'
         : 'text-muted'}"
-      title="API Keys"
+      use:tooltip={"API Keys"}
       onclick={() => onTogglePanel("api-keys")}
     >
       <Key size={14} />
@@ -81,15 +88,19 @@
       'stats'
         ? 'text-accent'
         : 'text-muted'}"
-      title="Storage Stats"
+      use:tooltip={"Storage Stats"}
       onclick={() => onTogglePanel("stats")}
     >
       <ChartNoAxesColumn size={14} />
     </button>
     <div class="mx-1 h-5 w-px bg-border"></div>
     <button
-      class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 text-muted transition-colors hover:bg-white/4 hover:text-[#f0a830]"
-      title="Deploy"
+      class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 transition-colors hover:bg-white/4 hover:text-[#f0a830] {rightPanel ===
+      'deploy'
+        ? 'text-[#f0a830]'
+        : 'text-muted'}"
+      use:tooltip={deployTooltip}
+      onclick={() => onTogglePanel("deploy")}
     >
       <Rocket size={14} />
     </button>
@@ -97,7 +108,7 @@
       <button
         type="submit"
         class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 text-muted transition-colors hover:bg-white/4 hover:text-text"
-        title="Sign out — {username}"
+        use:tooltip={`Sign out — ${username}`}
       >
         <LogOut size={14} />
       </button>
