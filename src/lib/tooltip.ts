@@ -61,7 +61,8 @@ export const tooltip = (node: HTMLElement, text: string) => {
   let el: HTMLDivElement | null = null;
 
   const enter = () => {
-    if (text) el = show(node, text);
+    if (el || !text) return;
+    el = show(node, text);
   };
   const leave = () => {
     el?.remove();
