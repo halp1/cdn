@@ -7,7 +7,8 @@
     Ellipsis,
     ArrowUpDown,
     Eye,
-    Pencil
+    Pencil,
+    Download
   } from "@lucide/svelte";
   import FileIcon from "./FileIcon.svelte";
   import ContextMenu from "./ContextMenu.svelte";
@@ -32,6 +33,7 @@
     onNewFolder: () => void;
     onDropFiles: (files: DroppedFile[]) => void;
     onDropMove: (keys: string[]) => void;
+    onDownload: (keys: string[]) => void;
     searchQuery: string;
     onSortedChange?: (items: R2Object[]) => void;
     scrollToKey?: string | null;
@@ -52,6 +54,7 @@
     onPreview,
     onDropFiles,
     onDropMove,
+    onDownload,
     searchQuery,
     onSortedChange,
     scrollToKey = null,
@@ -501,20 +504,29 @@
 						},
 					]
 				: []),
+			...(selected.size <= 1
+				? [
+						{
+							icon: Pencil as Component,
+							label: 'Rename',
+							action: () => {
+								renamingKey = obj.key;
+								renameValue = obj.key.slice(prefix.length).replace(/\/$/, '');
+							}
+						}
+					]
+				: []),
 			{
-				icon: Pencil as Component,
-				label: 'Rename',
-				action: () => {
-					renamingKey = obj.key;
-					renameValue = obj.key.slice(prefix.length).replace(/\/$/, '');
-				}
+				icon: Download as Component,
+				label: 'Download',
+				action: () => onDownload([...selected])
 			},
 			{ separator: true as const },
 			{
 				icon: Trash2 as Component,
 				label: 'Delete',
 				color: '#ff6b6b',
-				action: () => onDelete([obj.key])
+				action: () => onDelete([...selected])
 			}
 		]}
     <ContextMenu x={contextMenu.x} y={contextMenu.y} items={fileItems} onClose={closeContext} />

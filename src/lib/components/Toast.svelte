@@ -9,7 +9,11 @@
       class="toast flex max-w-sm min-w-72 items-start gap-3 border border-border bg-surface px-3.5 py-3 shadow-lg"
       class:toast--error={toast.type === "error"}
       class:toast--success={toast.type === "success"}
+      class:toast--loading={toast.type === "loading"}
     >
+      {#if toast.type === "loading"}
+        <span class="toast-spinner mt-0.5 shrink-0"></span>
+      {/if}
       <span class="min-w-0 flex-1 font-mono text-xs leading-relaxed break-words text-text">
         {toast.message}
       </span>
@@ -36,6 +40,26 @@
 
   .toast--success {
     border-left-color: var(--accent);
+  }
+
+  .toast--loading {
+    border-left-color: #6ab4f5;
+  }
+
+  .toast-spinner {
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid #6ab4f5;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: block;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
 
   @keyframes slide-in {

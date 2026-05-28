@@ -83,6 +83,17 @@ export const generateDownloadUrl = async (
     { expiresIn: 3600 }
   );
 
+export const getObjectBuffer = async (id: string, extension: string): Promise<Buffer> => {
+  const result = await S3.send(
+    new GetObjectCommand({ Bucket: R2_BUCKET_NAME, Key: buildR2Key(id, extension) })
+  );
+  const chunks: Uint8Array[] = [];
+  for await (const chunk of result.Body as AsyncIterable<Uint8Array>) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks);
+};
+
 export const deleteObject = async (id: string, extension: string): Promise<void> => {
   await S3.send(
     new DeleteObjectCommand({ Bucket: R2_BUCKET_NAME, Key: buildR2Key(id, extension) })
