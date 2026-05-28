@@ -20,7 +20,8 @@
     moveFolderCommand,
     getUploadUrl,
     createFolderCommand,
-    deleteFolderCommand
+    deleteFolderCommand,
+    getDownloadUrl
   } from "$lib/api/r2.remote";
   import type { R2Object } from "$lib/r2-server";
   import { SvelteMap, SvelteSet } from "svelte/reactivity";
@@ -148,6 +149,56 @@
 
   const handleDelete = (keys: string[]) => {
     deleteModalKeys = keys;
+  };
+
+  const handleDownload = async (keys: string[]) => {
+    const fileKeys = keys.filter((k) => !k.endsWith("/"));
+    const folderKeys = keys.filter((k) => k.endsWith("/"));
+    const hasAnyDownloadable = fileKeys.length > 0 || folderKeys.length > 0;
+    if (!hasAnyDownloadable) {
+      notifications.error("No downloadable files selected");
+      return;
+    }
+    const useZip = fileKeys.length + folderKeys.length > 5 || folderKeys.length > 0;
+    if (useZip) {
+      const dismiss = notifications.loading("Preparing zip\u2026");
+      try {
+        const res = await fetch("/api/internal/zip", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paths: keys })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "download.zip";
+        a.click();
+        URL.revokeObjectURL(url);
+        dismiss();
+      } catch (e) {
+        dismiss();
+        notifications.error(e instanceof Error ? e.message : "Download failed");
+      }
+    } else {
+      for (let i = 0; i < fileKeys.length; i++) {
+        try {
+          const { url } = await getDownloadUrl({ path: fileKeys[i] });
+          await new Promise<void>((resolve) => {
+            setTimeout(() => {
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = fileKeys[i].split("/").pop() ?? "file";
+              a.click();
+              resolve();
+            }, i * 150);
+          });
+        } catch (e) {
+          notifications.error(e instanceof Error ? e.message : "Download failed");
+        }
+      }
+    }
   };
 
   const confirmDelete = async () => {
@@ -586,6 +637,7 @@
             onNewFolder={handleNewFolder}
             onDropFiles={(files) => handleFileDrop(path, files)}
             onDropMove={(keys) => handleMoveToFolder(path, keys)}
+            onDownload={handleDownload}
             {uploadingFiles}
             {movingFiles}
             searchQuery=""

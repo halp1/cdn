@@ -1,16 +1,17 @@
 export interface Toast {
   id: string;
-  type: "error" | "success";
+  type: "error" | "success" | "loading";
   message: string;
 }
 
 let toasts = $state<Toast[]>([]);
 
-const add = (type: Toast["type"], message: string) => {
+const add = (type: Toast["type"], message: string, autoDismiss = true) => {
   const id = crypto.randomUUID();
   if (toasts.length >= 5) toasts = toasts.slice(1);
   toasts = [...toasts, { id, type, message }];
-  setTimeout(() => dismiss(id), 4000);
+  if (autoDismiss) setTimeout(() => dismiss(id), 4000);
+  return id;
 };
 
 const dismiss = (id: string) => {
@@ -23,5 +24,9 @@ export const notifications = {
   },
   error: (message: string) => add("error", message),
   success: (message: string) => add("success", message),
+  loading: (message: string): (() => void) => {
+    const id = add("loading", message, false);
+    return () => dismiss(id);
+  },
   dismiss
 };
