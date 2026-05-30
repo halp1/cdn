@@ -36,7 +36,10 @@
   });
 
   $effect(() => {
-    worker?.postMessage({ type: "init", payload: allObjects });
+    worker?.postMessage({
+      type: "init",
+      payload: allObjects.map(({ key, isFolder }) => ({ key, isFolder }))
+    });
   });
 
   $effect(() => {
