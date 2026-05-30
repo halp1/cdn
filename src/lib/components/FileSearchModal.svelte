@@ -116,7 +116,10 @@
                 onmouseenter={() => (highlightedIndex = index)}
               >
                 <div class="flex min-w-0 items-center gap-3">
-                  <FileIcon filename={file.isFolder ? "folder" : (file.key.split("/").pop() ?? file.key)} size={14} />
+                  <FileIcon
+                    filename={file.isFolder ? "folder" : (file.key.split("/").pop() ?? file.key)}
+                    size={14}
+                  />
                   <div class="min-w-0 flex-1 truncate">
                     <span class="font-mono text-sm text-text">{file.key}</span>
                   </div>

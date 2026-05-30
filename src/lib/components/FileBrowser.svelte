@@ -412,23 +412,15 @@
   };
 
   const handleFileSelect = (file: { key: string; isFolder: boolean }) => {
-    // Extract parent folder path
     const lastSlashIndex = file.key.lastIndexOf("/");
     const parentPath = lastSlashIndex > 0 ? file.key.slice(0, lastSlashIndex) + "/" : "";
 
-    // Navigate to parent folder
     navigate(parentPath);
+    pendingSelect = { key: file.key, forPath: parentPath };
 
-    // Select the file - use setTimeout to ensure navigation completes first
-    setTimeout(() => {
-      handleSelect([file.key], true);
-
-      // Open preview if it's not a folder
-      if (!file.isFolder && filesData?.objects) {
-        const obj = filesData.objects.find((o) => o.key === file.key);
-        if (obj) handlePreview(obj as R2Object);
-      }
-    }, 0);
+    if (!file.isFolder) {
+      handlePreview({ key: file.key, isFolder: false });
+    }
   };
 
   const selectedCount = $derived(selected.size);
