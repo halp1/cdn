@@ -19,7 +19,9 @@
 
   const getExt = (key: string) => key.split(".").pop()?.toLowerCase() ?? "";
 
-  const getType = (key: string): "image" | "video" | "audio" | "text" | "pdf" | "binary" => {
+  const getType = (
+    key: string
+  ): "image" | "video" | "audio" | "text" | "pdf" | "docx" | "binary" => {
     const ext = getExt(key);
     if (["png", "jpg", "jpeg", "jfif", "gif", "webp", "svg", "ico"].includes(ext)) return "image";
     if (["mp4", "mov", "webm", "avi"].includes(ext)) return "video";
@@ -46,6 +48,7 @@
     )
       return "text";
     if (ext === "pdf") return "pdf";
+    if (ext === "docx") return "docx";
     return "binary";
   };
 
@@ -158,6 +161,12 @@
 				</pre>
       {:else if fileType === "pdf"}
         <iframe src={publicUrl} class="h-full w-full max-w-3xl border" title={obj.key}></iframe>
+      {:else if fileType === "docx"}
+        <iframe
+          src={`https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + publicUrl)}&embedded=true`}
+          class="h-full w-full border-0"
+          title={obj.key}
+        ></iframe>
       {:else}
         <div class="flex h-37.5 flex-col items-center justify-center gap-3 text-sm text-muted">
           <Download size={24} />
