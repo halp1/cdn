@@ -392,6 +392,7 @@
       notifications.error(e instanceof Error ? e.message : "Failed to create folder");
       return;
     }
+    await invalidateAll();
     await Promise.all([refreshFiles(), refreshAllObjects()]);
   };
 
