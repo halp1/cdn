@@ -16,10 +16,44 @@
   let searchInput = $state<HTMLInputElement | null>(null);
   let highlightedIndex = $state(0);
 
+  const fuzzyScore = (key: string, q: string): number | null => {
+    const haystack = key.toLowerCase();
+    let qi = 0;
+    let lastMatchIdx = -1;
+    let totalGap = 0;
+    let consecutiveBonus = 0;
+    let prevMatched = false;
+
+    for (let i = 0; i < haystack.length && qi < q.length; i++) {
+      if (haystack[i] === q[qi]) {
+        if (lastMatchIdx !== -1) totalGap += i - lastMatchIdx - 1;
+        if (prevMatched) consecutiveBonus += 10;
+        lastMatchIdx = i;
+        prevMatched = true;
+        qi++;
+      } else {
+        prevMatched = false;
+      }
+    }
+
+    if (qi < q.length) return null;
+
+    const filenameStart = Math.max(haystack.lastIndexOf("/") + 1, 0);
+    const filenameBonus = lastMatchIdx >= filenameStart ? 20 : 0;
+
+    return -totalGap + consecutiveBonus + filenameBonus;
+  };
+
   const filtered = $derived.by(() => {
     if (!searchQuery) return [];
     const q = searchQuery.toLowerCase();
-    return allObjects.filter((obj) => obj.key.toLowerCase().includes(q)).slice(0, 100);
+    const scored: { obj: { key: string; isFolder: boolean }; score: number }[] = [];
+    for (const obj of allObjects) {
+      const score = fuzzyScore(obj.key, q);
+      if (score !== null) scored.push({ obj, score });
+    }
+    scored.sort((a, b) => b.score - a.score);
+    return scored.slice(0, 100).map((s) => s.obj);
   });
 
   // Reset highlight when query changes
