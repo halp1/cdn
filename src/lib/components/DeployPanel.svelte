@@ -42,7 +42,7 @@
       exitCode = data.exitCode;
       status = exitCode === 0 ? "done" : "failed";
       es.close();
-      setTimeout(() => window.location.reload(), 400);
+      setTimeout(() => window.location.reload(), 1500);
     });
 
     es.onerror = () => {
@@ -50,7 +50,7 @@
         status = "done";
         exitCode = 0;
         es.close();
-        setTimeout(() => window.location.reload(), 400);
+        setTimeout(() => window.location.reload(), 1500);
       } else if (status === "connecting") {
         status = "failed";
         es.close();
