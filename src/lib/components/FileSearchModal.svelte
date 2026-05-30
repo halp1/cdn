@@ -15,51 +15,39 @@
 
   let searchInput = $state<HTMLInputElement | null>(null);
   let highlightedIndex = $state(0);
+  let results = $state<{ key: string; isFolder: boolean }[]>([]);
+  let pendingQuery = "";
+  let worker = $state<Worker | null>(null);
 
-  const fuzzyScore = (key: string, q: string): number | null => {
-    const haystack = key.toLowerCase();
-    let qi = 0;
-    let lastMatchIdx = -1;
-    let totalGap = 0;
-    let consecutiveBonus = 0;
-    let prevMatched = false;
-
-    for (let i = 0; i < haystack.length && qi < q.length; i++) {
-      if (haystack[i] === q[qi]) {
-        if (lastMatchIdx !== -1) totalGap += i - lastMatchIdx - 1;
-        if (prevMatched) consecutiveBonus += 10;
-        lastMatchIdx = i;
-        prevMatched = true;
-        qi++;
-      } else {
-        prevMatched = false;
+  $effect(() => {
+    const w = new Worker(new URL("../workers/fileSearch.worker.ts", import.meta.url), {
+      type: "module"
+    });
+    w.onmessage = (
+      e: MessageEvent<{ query: string; results: { key: string; isFolder: boolean }[] }>
+    ) => {
+      if (e.data.query === pendingQuery) {
+        results = e.data.results;
+        highlightedIndex = 0;
       }
-    }
-
-    if (qi < q.length) return null;
-
-    const filenameStart = Math.max(haystack.lastIndexOf("/") + 1, 0);
-    const filenameBonus = lastMatchIdx >= filenameStart ? 20 : 0;
-
-    return -totalGap + consecutiveBonus + filenameBonus;
-  };
-
-  const filtered = $derived.by(() => {
-    if (!searchQuery) return [];
-    const q = searchQuery.toLowerCase();
-    const scored: { obj: { key: string; isFolder: boolean }; score: number }[] = [];
-    for (const obj of allObjects) {
-      const score = fuzzyScore(obj.key, q);
-      if (score !== null) scored.push({ obj, score });
-    }
-    scored.sort((a, b) => b.score - a.score);
-    return scored.slice(0, 100).map((s) => s.obj);
+    };
+    worker = w;
+    return () => w.terminate();
   });
 
-  // Reset highlight when query changes
   $effect(() => {
-    void searchQuery;
-    highlightedIndex = 0;
+    worker?.postMessage({ type: "init", payload: allObjects });
+  });
+
+  $effect(() => {
+    const q = searchQuery;
+    pendingQuery = q;
+    if (!q) {
+      results = [];
+      highlightedIndex = 0;
+      return;
+    }
+    worker?.postMessage({ type: "search", payload: q });
   });
 
   // Auto-focus input when modal opens
@@ -74,13 +62,13 @@
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      highlightedIndex = Math.min(highlightedIndex + 1, filtered.length - 1);
+      highlightedIndex = Math.min(highlightedIndex + 1, results.length - 1);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       highlightedIndex = Math.max(highlightedIndex - 1, 0);
-    } else if (e.key === "Enter" && filtered.length > 0) {
+    } else if (e.key === "Enter" && results.length > 0) {
       e.preventDefault();
-      onFileSelect(filtered[highlightedIndex]);
+      onFileSelect(results[highlightedIndex]);
       onClose();
     } else if (e.key === "Escape") {
       e.preventDefault();
@@ -134,13 +122,13 @@
 
       <!-- File list -->
       <div class="max-h-96 overflow-y-auto">
-        {#if filtered.length === 0}
+        {#if results.length === 0}
           <div class="px-5 py-8 text-center text-sm text-muted">
             {searchQuery ? "No files found" : "Start typing to search..."}
           </div>
         {:else}
           <div>
-            {#each filtered as file, index (file.key)}
+            {#each results as file, index (file.key)}
               <button
                 class="w-full border-b border-border px-5 py-3 text-left transition-colors hover:bg-[rgba(200,245,106,0.05)] {index ===
                 highlightedIndex
