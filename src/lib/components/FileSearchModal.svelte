@@ -1,5 +1,6 @@
 <script lang="ts">
   import { X } from "@lucide/svelte";
+  import FileIcon from "./FileIcon.svelte";
 
   interface Props {
     isOpen: boolean;
@@ -115,7 +116,7 @@
                 onmouseenter={() => (highlightedIndex = index)}
               >
                 <div class="flex min-w-0 items-center gap-3">
-                  <span class="text-sm text-accent">{file.isFolder ? "📁" : "📄"}</span>
+                  <FileIcon filename={file.isFolder ? "folder" : (file.key.split("/").pop() ?? file.key)} size={14} />
                   <div class="min-w-0 flex-1 truncate">
                     <span class="font-mono text-sm text-text">{file.key}</span>
                   </div>
