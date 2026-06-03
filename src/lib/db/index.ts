@@ -35,6 +35,18 @@ if (globalThis.__db) {
   globalThis.__db = db;
 }
 
+// Safe migrations to add is_private columns to existing tables
+try {
+  db.exec("ALTER TABLE folders ADD COLUMN is_private INTEGER DEFAULT NULL;");
+} catch (_) {
+  // column already exists
+}
+try {
+  db.exec("ALTER TABLE files ADD COLUMN is_private INTEGER DEFAULT NULL;");
+} catch (_) {
+  // column already exists
+}
+
 db.exec(`
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
