@@ -3,11 +3,12 @@ import { statements, isPathPrivate } from "$lib/db";
 import { generateDownloadUrl } from "$lib/r2-server";
 import type { RequestHandler } from "./$types";
 
-export const GET: RequestHandler = async ({ params }) => {
+export const GET: RequestHandler = async ({ params, locals }) => {
   const { path } = params;
   if (!path) error(400, "No path specified");
 
-  if (isPathPrivate(path)) {
+  // Only enforce private mode for unauthenticated public requests
+  if (!locals.user && isPathPrivate(path)) {
     error(404, "File not found");
   }
 
