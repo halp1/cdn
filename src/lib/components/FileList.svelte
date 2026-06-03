@@ -8,7 +8,9 @@
     ArrowUpDown,
     Eye,
     Pencil,
-    Download
+    Download,
+    Lock,
+    Globe
   } from "@lucide/svelte";
   import FileIcon from "./FileIcon.svelte";
   import ContextMenu from "./ContextMenu.svelte";
@@ -34,6 +36,7 @@
     onDropFiles: (files: DroppedFile[]) => void;
     onDropMove: (keys: string[]) => void;
     onDownload: (keys: string[]) => void;
+    onTogglePrivate?: (key: string, isFolder: boolean, value: number | null) => void;
     searchQuery: string;
     onSortedChange?: (items: R2Object[]) => void;
     scrollToKey?: string | null;
@@ -56,6 +59,7 @@
     onDropFiles,
     onDropMove,
     onDownload,
+    onTogglePrivate = undefined,
     searchQuery,
     onSortedChange,
     scrollToKey = null,
@@ -684,7 +688,39 @@
 				label: 'Delete',
 				color: '#ff6b6b',
 				action: () => onDelete([...selected])
-			}
+			},
+			{ separator: true as const },
+			...(onTogglePrivate
+				? [
+						...(obj.explicitPrivate !== 1
+							? [
+									{
+										icon: Lock as Component,
+										label: 'Set Private',
+										action: () => onTogglePrivate!(obj.key, obj.isFolder, 1)
+									}
+								]
+							: []),
+						...(obj.explicitPrivate !== 0
+							? [
+									{
+										icon: Globe as Component,
+										label: 'Set Public',
+										action: () => onTogglePrivate!(obj.key, obj.isFolder, 0)
+									}
+								]
+							: []),
+						...(obj.explicitPrivate !== null
+							? [
+									{
+										icon: Eye as Component,
+										label: 'Set to Inherit',
+										action: () => onTogglePrivate!(obj.key, obj.isFolder, null)
+									}
+								]
+							: [])
+					]
+				: [])
 		]}
     <ContextMenu x={contextMenu.x} y={contextMenu.y} items={fileItems} onClose={closeContext} />
   {/if}

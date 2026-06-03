@@ -21,7 +21,8 @@
     getUploadUrl,
     createFolderCommand,
     deleteFolderCommand,
-    getDownloadUrl
+    getDownloadUrl,
+    togglePrivateCommand
   } from "$lib/api/r2.remote";
   import type { R2Object } from "$lib/r2-server";
   import { SvelteMap, SvelteSet } from "svelte/reactivity";
@@ -246,6 +247,17 @@
       }
     } catch (e) {
       notifications.error(e instanceof Error ? e.message : "Rename failed");
+      return;
+    }
+    await invalidateAll();
+    await Promise.all([refreshFiles(), refreshAllObjects()]);
+  };
+
+  const handleTogglePrivate = async (key: string, isFolder: boolean, value: number | null) => {
+    try {
+      await togglePrivateCommand({ path: key, isFolder, isPrivate: value });
+    } catch (e) {
+      notifications.error(e instanceof Error ? e.message : "Failed to change visibility");
       return;
     }
     await invalidateAll();
@@ -663,6 +675,7 @@
             onDropFiles={(files) => handleFileDrop(path, files)}
             onDropMove={(keys) => handleMoveToFolder(path, keys)}
             onDownload={handleDownload}
+            onTogglePrivate={handleTogglePrivate}
             {uploadingFiles}
             {movingFiles}
             searchQuery=""

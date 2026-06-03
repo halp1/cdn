@@ -107,6 +107,8 @@ export interface Statements {
   getFoldersByPrefix: Database.Statement<[string], Folder>;
   getAllFolders: Database.Statement<[], Folder>;
   folderExists: Database.Statement<[string], CountRow>;
+  getFolderByPath: Database.Statement<[string], Folder | undefined>;
+  updateFolderPrivate: Database.Statement<[number | null, string], void>;
 
   createOneTimeLink: Database.Statement<[string, string, number, number], void>;
   getOneTimeLink: Database.Statement<[string], OneTimeLink | undefined>;
@@ -138,6 +140,7 @@ export interface Statements {
   getAllFiles: Database.Statement<[], FileRecord>;
   getFolderSizeByPrefix: Database.Statement<[string], SumRow>;
   updateExpireTimeKey: Database.Statement<[string, string], void>;
+  updateFilePrivate: Database.Statement<[number | null, string], void>;
 }
 
 export const statements = {
@@ -156,6 +159,10 @@ export const statements = {
   getAllFolders: db.prepare<[], Folder>("SELECT * FROM folders ORDER BY path"),
   folderExists: db.prepare<[string], CountRow>(
     "SELECT COUNT(*) as count FROM folders WHERE path = ?"
+  ),
+  getFolderByPath: db.prepare<[string], Folder>("SELECT * FROM folders WHERE path = ?"),
+  updateFolderPrivate: db.prepare<[number | null, string], void>(
+    "UPDATE folders SET is_private = ? WHERE path = ?"
   ),
 
   createOneTimeLink: db.prepare<[string, string, number, number], void>(
@@ -219,5 +226,28 @@ export const statements = {
   ),
   updateExpireTimeKey: db.prepare<[string, string], void>(
     "UPDATE expire_times SET object_key = ? WHERE object_key = ?"
+  ),
+  updateFilePrivate: db.prepare<[number | null, string], void>(
+    "UPDATE files SET is_private = ? WHERE path = ?"
   )
 } satisfies Statements;
+
+export function isPathPrivate(pathStr: string): boolean {
+  // 1. Check file itself
+  const file = statements.getFileByPath.get(pathStr);
+  if (file && file.is_private !== null) {
+    return file.is_private === 1;
+  }
+
+  // 2. Traversal of parent folders from deepest outward
+  const parts = pathStr.split("/");
+  for (let i = parts.length - 1; i > 0; i--) {
+    const folderPath = parts.slice(0, i).join("/") + "/";
+    const folder = statements.getFolderByPath.get(folderPath);
+    if (folder && folder.is_private !== null) {
+      return folder.is_private === 1;
+    }
+  }
+
+  return false;
+}

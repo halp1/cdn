@@ -8,6 +8,7 @@ export interface Folder {
   id: number;
   path: string;
   created_at: number;
+  is_private: number | null;
 }
 
 export interface OneTimeLink {
@@ -63,6 +64,7 @@ export interface FileRecord {
   size: number;
   content_type: string;
   created_at: number;
+  is_private: number | null;
 }
 
 export interface SumRow {
