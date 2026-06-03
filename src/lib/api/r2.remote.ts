@@ -8,7 +8,7 @@ import {
   getStorageStats
 } from "$lib/r2-server";
 import type { R2Object } from "$lib/r2-server";
-import { statements } from "$lib/db";
+import { statements, isPathPrivate } from "$lib/db";
 import { sanitizeFilename } from "$lib/filename-utils";
 
 const extractExtension = (filename: string): string => {
@@ -36,7 +36,9 @@ export const listObjectsQuery = query(
         key: f.path,
         size: f.size,
         lastModified: new Date(f.created_at * 1000),
-        isFolder: false as const
+        isFolder: false as const,
+        isPrivate: isPathPrivate(f.path),
+        explicitPrivate: f.is_private
       }));
 
     const r2FilePaths = new Set(files.map((f) => f.path));
@@ -47,7 +49,12 @@ export const listObjectsQuery = query(
         const rel = f.path.slice(prefix.length).replace(/\/$/, "");
         return rel.length > 0 && !rel.includes("/");
       })
-      .map((f) => ({ key: f.path, isFolder: true as const }));
+      .map((f) => ({
+        key: f.path,
+        isFolder: true as const,
+        isPrivate: isPathPrivate(f.path),
+        explicitPrivate: f.is_private
+      }));
 
     const subfolderPrefixes = new Set<string>();
     for (const f of files) {
@@ -59,7 +66,12 @@ export const listObjectsQuery = query(
     }
     const implicitFolders: R2Object[] = [...subfolderPrefixes]
       .filter((p) => !dbFolders.some((f) => f.path === p))
-      .map((p) => ({ key: p, isFolder: true as const }));
+      .map((p) => ({
+        key: p,
+        isFolder: true as const,
+        isPrivate: isPathPrivate(p),
+        explicitPrivate: null
+      }));
 
     return {
       objects: [...virtualFolders, ...implicitFolders, ...fileObjects],
@@ -80,12 +92,19 @@ export const listAllObjectsQuery = query(async () => {
     key: f.path,
     size: f.size,
     lastModified: new Date(f.created_at * 1000),
-    isFolder: false as const
+    isFolder: false as const,
+    isPrivate: isPathPrivate(f.path),
+    explicitPrivate: f.is_private
   }));
 
   const folderObjects: R2Object[] = allFolders
     .filter((f) => !filePaths.has(f.path))
-    .map((f) => ({ key: f.path, isFolder: true as const }));
+    .map((f) => ({
+      key: f.path,
+      isFolder: true as const,
+      isPrivate: isPathPrivate(f.path),
+      explicitPrivate: f.is_private
+    }));
 
   return { objects: [...folderObjects, ...fileObjects] };
 });
@@ -221,5 +240,26 @@ export const getVirtualFolders = query(
     const pattern = prefix ? `${prefix}%` : "%";
     const folders = statements.getFoldersByPrefix.all(pattern);
     return { folders };
+  }
+);
+
+export const togglePrivateCommand = command(
+  v.object({
+    path: v.string(),
+    isFolder: v.boolean(),
+    isPrivate: v.nullable(v.number())
+  }),
+  async ({ path, isFolder, isPrivate }) => {
+    const { locals } = getRequestEvent();
+    if (!locals.user) error(401, "Unauthorized");
+
+    if (isFolder) {
+      const normalizedPath = path.endsWith("/") ? path : path + "/";
+      statements.createFolder.run(normalizedPath);
+      statements.updateFolderPrivate.run(isPrivate, normalizedPath);
+    } else {
+      statements.updateFilePrivate.run(isPrivate, path);
+    }
+    return { success: true };
   }
 );

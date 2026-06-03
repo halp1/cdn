@@ -38,6 +38,8 @@ export interface R2Object {
   size?: number;
   lastModified?: Date;
   isFolder: boolean;
+  isPrivate?: boolean;
+  explicitPrivate?: number | null;
 }
 
 export interface R2ListResult {
