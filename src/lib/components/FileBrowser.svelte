@@ -1,7 +1,7 @@
 <script lang="ts">
   /* eslint-disable svelte/no-navigation-without-resolve */
   import { goto, invalidateAll } from "$app/navigation";
-  import { FolderPlus, Upload, Trash2 } from "@lucide/svelte";
+  import { FolderPlus, Upload, Trash2, LayoutGrid, List } from "@lucide/svelte";
   import Header from "$lib/components/Header.svelte";
   import FileTree from "$lib/components/FileTree.svelte";
   import FileList from "$lib/components/FileList.svelte";
@@ -43,6 +43,25 @@
 
   type RightPanelMode = "upload-links" | "api-keys" | "stats" | "preview" | "deploy" | null;
   let rightPanel = $state<RightPanelMode>(null);
+
+  let viewMode = $state<"list" | "grid">("list");
+
+  $effect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("cdn_view_mode");
+      if (saved === "list" || saved === "grid") {
+        viewMode = saved;
+      }
+    }
+  });
+
+  const toggleViewMode = () => {
+    const next = viewMode === "list" ? "grid" : "list";
+    viewMode = next;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("cdn_view_mode", next);
+    }
+  };
 
   let treeWidth = $state(220);
   let windowWidth = $state(typeof window !== "undefined" ? window.innerWidth : 1280);
@@ -604,6 +623,19 @@
             <Upload size={13} />
             <span>Upload</span>
           </button>
+          <button
+            class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-muted uppercase transition-[color,border-color,background] hover:border-muted hover:bg-white/3 hover:text-text"
+            onclick={toggleViewMode}
+            use:tooltip={viewMode === "list" ? "Tiled view" : "List view"}
+          >
+            {#if viewMode === "list"}
+              <LayoutGrid size={13} />
+              <span>Tiled</span>
+            {:else}
+              <List size={13} />
+              <span>List</span>
+            {/if}
+          </button>
         </div>
       </div>
 
@@ -637,6 +669,7 @@
             onSortedChange={(items) => {
               sortedFileItems = items;
             }}
+            {viewMode}
           />
         {/if}
       </div>

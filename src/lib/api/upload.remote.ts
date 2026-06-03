@@ -1,4 +1,4 @@
-import { command, getRequestEvent } from "$app/server";
+import { command } from "$app/server";
 import { error } from "@sveltejs/kit";
 import * as v from "valibot";
 import { statements } from "$lib/db";
