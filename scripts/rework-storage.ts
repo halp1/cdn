@@ -146,6 +146,8 @@ const insertFile = db.prepare<[string, string, string, number, string], void>(
 const getFileByPath = db.prepare<[string], { id: string; extension: string } | undefined>(
   "SELECT id, extension FROM files WHERE path = ?"
 );
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const getExpireTimes = db.prepare<[], { id: number; object_key: string }[]>(
   "SELECT id, object_key FROM expire_times"
 );

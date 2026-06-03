@@ -40,6 +40,7 @@
     previewKey?: string | null;
     uploadingFiles?: Map<string, number>;
     movingFiles?: Set<string>;
+    viewMode?: "list" | "grid";
   }
 
   let {
@@ -60,7 +61,8 @@
     scrollToKey = null,
     previewKey = null,
     uploadingFiles = undefined,
-    movingFiles = undefined
+    movingFiles = undefined,
+    viewMode = "list"
   }: Props = $props();
 
   type SortKey = "name" | "size" | "modified";
@@ -287,6 +289,12 @@
     if (!d) return "—";
     return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   };
+
+  const getExt = (key: string) => key.split(".").pop()?.toLowerCase() ?? "";
+  const isImage = (key: string) => {
+    const ext = getExt(key);
+    return ["png", "jpg", "jpeg", "jfif", "gif", "webp", "svg", "ico"].includes(ext);
+  };
 </script>
 
 <svelte:window
@@ -322,34 +330,36 @@
     }
   }}
 >
-  <div
-    class="list-header grid h-7 shrink-0 border-b border-border bg-surface"
-    style="grid-template-columns: 28px 1fr 80px 110px 32px"
-  >
-    <div class="flex items-center px-1.5"></div>
-    <button
-      class="flex cursor-pointer items-center justify-start border-0 bg-transparent px-1.5 text-left font-mono text-xs tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
-      onclick={() => cycleSort("name")}
+  {#if viewMode === "list"}
+    <div
+      class="list-header grid h-7 shrink-0 border-b border-border bg-surface"
+      style="grid-template-columns: 28px 1fr 80px 110px 32px"
     >
-      Name
-      {#if sortKey === "name"}<ArrowUpDown size={10} class="ml-1 opacity-60" />{/if}
-    </button>
-    <button
-      class="flex cursor-pointer items-center justify-end border-0 bg-transparent px-1.5 font-mono text-xs tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
-      onclick={() => cycleSort("size")}
-    >
-      Size
-      {#if sortKey === "size"}<ArrowUpDown size={10} class="ml-1 opacity-60" />{/if}
-    </button>
-    <button
-      class="flex cursor-pointer items-center justify-end border-0 bg-transparent px-1.5 font-mono text-xs tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
-      onclick={() => cycleSort("modified")}
-    >
-      Modified
-      {#if sortKey === "modified"}<ArrowUpDown size={10} class="ml-1 opacity-60" />{/if}
-    </button>
-    <div class="flex items-center px-1.5"></div>
-  </div>
+      <div class="flex items-center px-1.5"></div>
+      <button
+        class="flex cursor-pointer items-center justify-start border-0 bg-transparent px-1.5 text-left font-mono text-xs tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
+        onclick={() => cycleSort("name")}
+      >
+        Name
+        {#if sortKey === "name"}<ArrowUpDown size={10} class="ml-1 opacity-60" />{/if}
+      </button>
+      <button
+        class="flex cursor-pointer items-center justify-end border-0 bg-transparent px-1.5 font-mono text-xs tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
+        onclick={() => cycleSort("size")}
+      >
+        Size
+        {#if sortKey === "size"}<ArrowUpDown size={10} class="ml-1 opacity-60" />{/if}
+      </button>
+      <button
+        class="flex cursor-pointer items-center justify-end border-0 bg-transparent px-1.5 font-mono text-xs tracking-[0.14em] text-muted uppercase transition-colors hover:text-text"
+        onclick={() => cycleSort("modified")}
+      >
+        Modified
+        {#if sortKey === "modified"}<ArrowUpDown size={10} class="ml-1 opacity-60" />{/if}
+      </button>
+      <div class="flex items-center px-1.5"></div>
+    </div>
+  {/if}
 
   <div
     class="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
@@ -361,7 +371,7 @@
         <Upload size={24} />
         <span>Drop files here or click Upload</span>
       </div>
-    {:else}
+    {:else if viewMode === "list"}
       {#each sorted() as obj, i (obj.key)}
         {@const isSelected = selected.has(obj.key)}
         {@const isOpen = obj.key === previewKey}
@@ -481,6 +491,153 @@
           {/if}
         </div>
       {/each}
+    {:else}
+      <!-- Grid / Tiled view mode -->
+      <div class="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4 p-4">
+        {#each sorted() as obj, i (obj.key)}
+          {@const isSelected = selected.has(obj.key)}
+          {@const isOpen = obj.key === previewKey}
+          {@const uploadProgress = uploadingFiles?.get(obj.key) ?? null}
+          {@const isUploading = uploadProgress !== null}
+          {@const isMoving = movingFiles?.has(obj.key) ?? false}
+          <div
+            data-key={obj.key}
+            class="group relative flex cursor-pointer flex-col overflow-hidden rounded border border-border/80 bg-surface/30 transition-all select-none hover:border-muted/50 hover:bg-surface focus:outline-none {isUploading ||
+            isMoving
+              ? ''
+              : 'animate-[fadeUp_0.25s_ease_both]'} {isSelected
+              ? 'border-accent bg-accent/[0.05] ring-1 ring-accent'
+              : isOpen
+                ? 'border-[#6ab4f5] bg-[#6ab4f5]/6 ring-1 ring-[#6ab4f5]'
+                : ''}"
+            style={!isUploading && !isMoving ? `animation-delay: ${Math.min(i, 30) * 15}ms` : ""}
+            onclick={(e) => (renamingKey === obj.key ? null : handleRowClick(e, obj.key))}
+            ondblclick={() => (renamingKey === obj.key ? null : handleRowDblClick(obj))}
+            oncontextmenu={(e) => handleContextMenu(e, obj.key)}
+            draggable={renamingKey !== obj.key && !isUploading && !isMoving}
+            ondragstart={(e) => {
+              if (renamingKey === obj.key) {
+                e.preventDefault();
+                return;
+              }
+              const dragKeys = selected.has(obj.key) ? [...selected] : [obj.key];
+              if (!selected.has(obj.key)) onSelect([obj.key], true);
+              e.dataTransfer!.effectAllowed = "move";
+              e.dataTransfer!.setData("application/x-cdn-move", JSON.stringify(dragKeys));
+              const ghost = buildDragGhost(dragKeys);
+              e.dataTransfer!.setDragImage(ghost, Math.min(16, ghost.offsetWidth / 2), 12);
+              requestAnimationFrame(() => {
+                if (document.body.contains(ghost)) document.body.removeChild(ghost);
+              });
+            }}
+            role="row"
+            tabindex="0"
+            onkeydown={(e) =>
+              renamingKey !== obj.key && e.key === "Enter" && handleRowDblClick(obj)}
+          >
+            <!-- Card Image or Icon Section -->
+            <div
+              class="relative flex aspect-square w-full items-center justify-center overflow-hidden border-b border-border/50 bg-black/20 select-none"
+            >
+              {#if isOpen}
+                <span class="absolute top-0 bottom-0 left-0 w-0.5 bg-[#6ab4f5]"></span>
+              {/if}
+
+              {#if obj.isFolder}
+                <div class="flex items-center justify-center p-4">
+                  <Folder
+                    size={44}
+                    class="text-[#e8c87a] transition-transform group-hover:scale-105"
+                  />
+                </div>
+              {:else if isImage(obj.key)}
+                <img
+                  src="/obj/{obj.key}"
+                  alt={obj.key.split("/").pop()}
+                  class="h-full w-full object-cover transition-transform group-hover:scale-102"
+                  loading="lazy"
+                />
+              {:else}
+                <div
+                  class="flex items-center justify-center p-4 transition-transform group-hover:scale-105"
+                >
+                  <FileIcon
+                    filename={renamingKey === obj.key
+                      ? renameValue
+                      : (pendingRenames.get(obj.key) ?? obj.key.split("/").pop() ?? obj.key)}
+                    size={44}
+                  />
+                </div>
+              {/if}
+            </div>
+
+            <!-- Card Bottom Bar (Filename and details) -->
+            <div class="flex h-12 w-full items-center justify-between bg-surface/50 p-2">
+              <div class="min-w-0 flex-1 pr-1 select-text">
+                {#if renamingKey === obj.key}
+                  <input
+                    bind:this={renameInputEl}
+                    bind:value={renameValue}
+                    class="w-full border-0 border-b bg-transparent p-0 font-mono text-xs text-(--text) ring-0 outline-none {renameConflict
+                      ? 'border-[#ff6b6b]'
+                      : 'border-(--accent)'}"
+                    onclick={(e) => e.stopPropagation()}
+                    onkeydown={(e) => {
+                      e.stopPropagation();
+                      if (e.key === "Enter") commitRename(obj.key);
+                      else if (e.key === "Escape") cancelRename();
+                    }}
+                    onblur={() => commitRename(obj.key)}
+                  />
+                {:else}
+                  <div
+                    class="truncate font-mono text-xs {isSelected
+                      ? 'font-semibold text-accent'
+                      : isOpen
+                        ? 'font-semibold text-[#6ab4f5]'
+                        : 'text-text'}"
+                    title={pendingRenames.get(obj.key) ?? getLabel(obj)}
+                  >
+                    {pendingRenames.get(obj.key) ?? getLabel(obj)}
+                  </div>
+                  <div class="mt-0.5 font-mono text-[10px] text-muted">
+                    {obj.isFolder
+                      ? getFolderSize(obj.key) !== undefined
+                        ? formatFileSize(getFolderSize(obj.key)!)
+                        : "—"
+                      : formatFileSize(obj.size ?? 0)}
+                  </div>
+                {/if}
+              </div>
+
+              <div class="flex shrink-0 items-center">
+                <button
+                  class="row-action flex items-center border-none bg-none p-1 text-transparent transition-colors group-hover:text-muted hover:text-text!"
+                  onclick={(e) => {
+                    e.stopPropagation();
+                    handleContextMenu(e, obj.key);
+                  }}
+                  use:tooltip={"More actions"}
+                >
+                  <Ellipsis size={12} />
+                </button>
+              </div>
+            </div>
+
+            <!-- Upload and Move Overlays -->
+            {#if isUploading}
+              <div
+                class="pointer-events-none absolute bottom-0 left-0 h-0.5 bg-accent transition-[width_0.15s_ease]"
+                style="width: {(uploadProgress ?? 0) * 100}%"
+              ></div>
+            {:else if isMoving}
+              <div
+                class="pointer-events-none absolute bottom-0 left-0 h-0.5 w-full animate-pulse bg-accent/60"
+              ></div>
+            {/if}
+          </div>
+        {/each}
+      </div>
     {/if}
   </div>
 </div>

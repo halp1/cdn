@@ -52,7 +52,7 @@
   style="left: {left}px; top: {top}px"
   onclick={(e) => e.stopPropagation()}
 >
-  {#each items as entry}
+  {#each items as entry, i (i)}
     {#if "separator" in entry}
       <div class="mx-0 my-1 h-px bg-(--border)"></div>
     {:else}

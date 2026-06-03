@@ -50,7 +50,7 @@ export const isDirectChildFolder = (parentLogical: string, folderPath: string): 
   return !remainder.includes("/") && remainder.length > 0;
 };
 
-export const parseDestinationHeader = (destination: string, origin: string): string | null => {
+export const parseDestinationHeader = (destination: string, _origin: string): string | null => {
   let path: string;
   try {
     const url = new URL(destination);

@@ -1,6 +1,7 @@
 import { execSync, spawn } from "child_process";
 import type { RequestHandler } from "@sveltejs/kit";
 
+// eslint-disable-next-line no-control-regex
 const ANSI_RE = /\x1b(?:[@-Z\\-_]|\[[0-9;]*[a-zA-Z])/g;
 const stripAnsi = (s: string) => s.replace(ANSI_RE, "");
 
@@ -15,10 +16,13 @@ export const GET: RequestHandler = async ({ locals }) => {
       const enqueue = (event: string, data: string) => {
         try {
           controller.enqueue(encoder.encode(`event: ${event}\ndata: ${data}\n\n`));
-        } catch {}
+        } catch {
+          /* empty */
+        }
       };
 
       let currentCommit = "";
+      // eslint-disable-next-line no-useless-assignment
       let targetCommit = "";
       try {
         currentCommit = execSync("git rev-parse --short HEAD", { cwd, stdio: "pipe" })
@@ -51,7 +55,9 @@ export const GET: RequestHandler = async ({ locals }) => {
         enqueue("done", JSON.stringify({ exitCode: code ?? 1 }));
         try {
           controller.close();
-        } catch {}
+        } catch {
+          /* empty */
+        }
       });
 
       child.on("error", (err) => {
@@ -59,7 +65,9 @@ export const GET: RequestHandler = async ({ locals }) => {
         enqueue("done", JSON.stringify({ exitCode: 1 }));
         try {
           controller.close();
-        } catch {}
+        } catch {
+          /* empty */
+        }
       });
     }
   });
