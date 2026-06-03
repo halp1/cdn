@@ -73,14 +73,19 @@ export const generateUploadUrl = async (
 export const generateDownloadUrl = async (
   id: string,
   extension: string,
-  filename?: string
+  filename?: string,
+  attachment: boolean = false
 ): Promise<string> =>
   getSignedUrl(
     S3,
     new GetObjectCommand({
       Bucket: R2_BUCKET_NAME,
       Key: buildR2Key(id, extension),
-      ...(filename ? { ResponseContentDisposition: `inline; filename="${filename}"` } : {})
+      ...(filename
+        ? {
+            ResponseContentDisposition: `${attachment ? "attachment" : "inline"}; filename="${filename}"`
+          }
+        : {})
     }),
     { expiresIn: 3600 }
   );

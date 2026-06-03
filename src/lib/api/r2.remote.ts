@@ -143,7 +143,8 @@ export const getDownloadUrl = command(v.object({ path: v.string() }), async ({ p
 
   const file = statements.getFileByPath.get(path);
   if (!file) error(404, "File not found");
-  const url = await generateDownloadUrl(file.id, file.extension);
+  const filename = path.split("/").pop() ?? path;
+  const url = await generateDownloadUrl(file.id, file.extension, filename, true);
   return { url };
 });
 
