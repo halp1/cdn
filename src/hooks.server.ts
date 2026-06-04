@@ -2,6 +2,10 @@ import { jwt } from "$lib/jwt";
 import { statements } from "$lib/db";
 import { handleWebDAV } from "$lib/webdav/handler";
 import type { Handle } from "@sveltejs/kit";
+import { startBackupScheduler } from "$lib/backup-server";
+
+// Start the Google Drive Backup scheduler
+startBackupScheduler();
 
 const CORS_PATHS = ["/api", "/obj"];
 

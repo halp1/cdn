@@ -9,7 +9,9 @@ import type {
   ApiKeyRow,
   FileRecord,
   CountRow,
-  SumRow
+  SumRow,
+  OAuthToken,
+  BackupRow
 } from "./types";
 
 export * from "./types";
@@ -106,9 +108,35 @@ db.exec(`
 	);
 
 	CREATE INDEX IF NOT EXISTS idx_files_path ON files (path);
+
+	CREATE TABLE IF NOT EXISTS oauth_tokens (
+		provider TEXT PRIMARY KEY,
+		access_token TEXT NOT NULL,
+		refresh_token TEXT,
+		expires_at INTEGER,
+		client_id TEXT,
+		client_secret TEXT,
+		redirect_uri TEXT,
+		folder_id TEXT
+	);
+
+	CREATE TABLE IF NOT EXISTS backups (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		timestamp INTEGER NOT NULL,
+		status TEXT NOT NULL,
+		error_message TEXT,
+		drive_file_id TEXT
+	);
 `);
 
 export interface Statements {
+  getOAuthToken: Database.Statement<[string], OAuthToken | undefined>;
+  setOAuthToken: Database.Statement<[string, string, string | null, number | null, string | null, string | null, string | null, string | null], void>;
+  deleteOAuthToken: Database.Statement<[string], void>;
+  createBackup: Database.Statement<[number, string, string | null, string | null], void>;
+  getLastBackup: Database.Statement<[], BackupRow | undefined>;
+  getBackups: Database.Statement<[], BackupRow>;
+
   createUser: Database.Statement<[string, string], void>;
   getUserById: Database.Statement<[number], User | undefined>;
   getUserByUsername: Database.Statement<[string], User | undefined>;
@@ -156,6 +184,17 @@ export interface Statements {
 }
 
 export const statements = {
+  getOAuthToken: db.prepare<[string], OAuthToken>("SELECT * FROM oauth_tokens WHERE provider = ?"),
+  setOAuthToken: db.prepare<[string, string, string | null, number | null, string | null, string | null, string | null, string | null], void>(
+    "INSERT OR REPLACE INTO oauth_tokens (provider, access_token, refresh_token, expires_at, client_id, client_secret, redirect_uri, folder_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+  ),
+  deleteOAuthToken: db.prepare<[string], void>("DELETE FROM oauth_tokens WHERE provider = ?"),
+  createBackup: db.prepare<[number, string, string | null, string | null], void>(
+    "INSERT INTO backups (timestamp, status, error_message, drive_file_id) VALUES (?, ?, ?, ?)"
+  ),
+  getLastBackup: db.prepare<[], BackupRow>("SELECT * FROM backups ORDER BY timestamp DESC LIMIT 1"),
+  getBackups: db.prepare<[], BackupRow>("SELECT * FROM backups ORDER BY timestamp DESC LIMIT 50"),
+
   createUser: db.prepare<[string, string], void>(
     "INSERT INTO users (username, password_hash) VALUES (?, ?)"
   ),

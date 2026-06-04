@@ -4,10 +4,10 @@
   import { getApiKeys, createApiKeyCommand, deleteApiKeyCommand } from "$lib/api/api-keys.remote";
   import { getStorageStatsQuery } from "$lib/api/r2.remote";
   import { formatFileSize } from "$lib/utils";
-  import type { ApiKeyPermission } from "$lib/db/types";
+  import type { ApiKeyPermission, BackupRow } from "$lib/db/types";
   import { tooltip } from "$lib/tooltip";
 
-  type Panel = "upload-links" | "api-keys" | "stats";
+  type Panel = "upload-links" | "api-keys" | "stats" | "backups";
 
   interface Props {
     panel: Panel;
@@ -102,8 +102,126 @@
   const titles: Record<Panel, string> = {
     "upload-links": "Upload Links",
     "api-keys": "API Keys",
-    stats: "Storage Stats"
+    stats: "Storage Stats",
+    backups: "Google Drive Backup"
   };
+
+  let backupData = $state<{
+    configured: boolean;
+    connected: boolean;
+    client_id: string;
+    redirect_uri: string;
+    folder_id: string;
+    lastBackup: BackupRow | null;
+    backups: BackupRow[];
+  } | null>(null);
+
+  let loadingBackups = $state(false);
+  let triggeringBackup = $state(false);
+  let savingConfig = $state(false);
+
+  // Configuration form fields
+  let clientIdInput = $state("");
+  let clientSecretInput = $state("");
+  let redirectUriInput = $state("");
+  let folderIdInput = $state("");
+
+  async function loadBackupData() {
+    loadingBackups = true;
+    try {
+      const res = await fetch("/api/backups");
+      if (res.ok) {
+        backupData = await res.json();
+        if (backupData) {
+          clientIdInput = backupData.client_id;
+          redirectUriInput = backupData.redirect_uri || (window.location.origin + "/api/auth/google/callback");
+          folderIdInput = backupData.folder_id;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loadingBackups = false;
+    }
+  }
+
+  $effect(() => {
+    if (panel === "backups") {
+      loadBackupData();
+    }
+  });
+
+  async function handleSaveConfig() {
+    savingConfig = true;
+    try {
+      const res = await fetch("/api/backups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "save_config",
+          client_id: clientIdInput,
+          client_secret: clientSecretInput,
+          redirect_uri: redirectUriInput,
+          folder_id: folderIdInput
+        })
+      });
+      if (res.ok) {
+        const authRes = await fetch("/api/auth/google", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            client_id: clientIdInput,
+            client_secret: clientSecretInput,
+            redirect_uri: redirectUriInput,
+            folder_id: folderIdInput
+          })
+        });
+        const authData = await authRes.json();
+        if (authData.url) {
+          window.location.href = authData.url;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      savingConfig = false;
+    }
+  }
+
+  async function handleTriggerBackup() {
+    triggeringBackup = true;
+    try {
+      const res = await fetch("/api/backups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "trigger_backup" })
+      });
+      if (res.ok) {
+        await loadBackupData();
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      triggeringBackup = false;
+    }
+  }
+
+  async function handleDisconnect() {
+    if (!confirm("Are you sure you want to disconnect Google Drive?")) return;
+    try {
+      const res = await fetch("/api/backups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "disconnect" })
+      });
+      if (res.ok) {
+        await loadBackupData();
+        clientSecretInput = "";
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
 </script>
 
 <svelte:window
@@ -429,6 +547,126 @@
             <RefreshCw size={11} /> Refresh
           </button>
         {/await}
+      </div>
+    {:else if panel === "backups"}
+      <div class="flex flex-col gap-3">
+        {#if loadingBackups && !backupData}
+          <div class="flex justify-center p-4 text-muted"><RefreshCw size={12} class="spin" /></div>
+        {:else if backupData}
+          {#if !backupData.connected}
+            <div class="flex flex-col gap-2.5 border border-border bg-bg p-3">
+              <p class="text-xs tracking-[0.14em] text-muted uppercase font-bold">Connect Google Drive</p>
+              <p class="text-xs text-muted leading-relaxed">
+                Configure your Google OAuth credentials to set up automated SQLite backups to Google Drive.
+              </p>
+
+              <div class="flex flex-col gap-1.5 mt-1">
+                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="client-id">Client ID</label>
+                <input
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  id="client-id"
+                  bind:value={clientIdInput}
+                  placeholder="Google OAuth Client ID"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="client-secret">Client Secret</label>
+                <input
+                  type="password"
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  id="client-secret"
+                  bind:value={clientSecretInput}
+                  placeholder="••••••••••••"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="redirect-uri">Redirect URI</label>
+                <input
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  id="redirect-uri"
+                  bind:value={redirectUriInput}
+                />
+              </div>
+
+              <div class="flex flex-col gap-1.5">
+                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="folder-id">Google Drive Folder ID (Optional)</label>
+                <input
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  id="folder-id"
+                  bind:value={folderIdInput}
+                  placeholder="Root if empty"
+                />
+              </div>
+
+              <button
+                class="mt-1 w-full cursor-pointer border-0 bg-accent py-2 font-mono text-xs font-medium tracking-[0.12em] text-bg uppercase transition-opacity hover:opacity-[0.88] disabled:cursor-not-allowed disabled:opacity-40"
+                onclick={handleSaveConfig}
+                disabled={savingConfig || !clientIdInput || !clientSecretInput || !redirectUriInput}
+              >
+                {savingConfig ? "Configuring..." : "Connect Google Drive"}
+              </button>
+            </div>
+          {:else}
+            <div class="flex flex-col gap-3">
+              <div class="flex items-center justify-between border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5">
+                <div class="flex items-center gap-2">
+                  <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                  <span class="text-xs font-mono text-emerald-400">Connected</span>
+                </div>
+                <button
+                  class="cursor-pointer border border-red-500/30 bg-transparent px-2 py-0.5 font-mono text-[10px] tracking-wider text-red-400 uppercase transition-colors hover:bg-red-500/10"
+                  onclick={handleDisconnect}
+                >
+                  Disconnect
+                </button>
+              </div>
+
+              {#if backupData.folder_id}
+                <div class="border border-border bg-bg/50 px-3 py-2 font-mono text-[11px] text-muted">
+                  <span class="uppercase">Folder ID:</span> <span class="text-text select-all">{backupData.folder_id}</span>
+                </div>
+              {/if}
+
+              <button
+                class="w-full cursor-pointer border border-border bg-transparent py-2 font-mono text-xs tracking-widest text-muted uppercase transition-all hover:border-accent hover:text-accent disabled:opacity-40"
+                onclick={handleTriggerBackup}
+                disabled={triggeringBackup}
+              >
+                {triggeringBackup ? "Backing up..." : "Backup Database Now"}
+              </button>
+
+              <div class="mt-2">
+                <p class="mb-2 text-[10px] tracking-widest text-muted uppercase font-bold">Backup History</p>
+                <div class="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-1">
+                  {#each backupData.backups as backup (backup.id)}
+                    <div class="flex flex-col border border-border bg-bg/30 px-2.5 py-2 font-mono text-xs">
+                      <div class="flex items-center justify-between">
+                        <span class="text-text">{new Date(backup.timestamp * 1000).toLocaleString()}</span>
+                        <span class="px-1 py-0.25 text-[10px] uppercase font-bold {backup.status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
+                          {backup.status}
+                        </span>
+                      </div>
+                      {#if backup.error_message}
+                        <p class="mt-1 text-[11px] text-red-400 leading-tight border-t border-red-500/10 pt-1">
+                          {backup.error_message}
+                        </p>
+                      {/if}
+                      {#if backup.drive_file_id}
+                        <span class="mt-1 text-[10px] text-muted overflow-hidden text-ellipsis whitespace-nowrap">
+                          ID: {backup.drive_file_id}
+                        </span>
+                      {/if}
+                    </div>
+                  {:else}
+                    <p class="text-center py-4 text-xs text-border">No backups recorded yet</p>
+                  {/each}
+                </div>
+              </div>
+            </div>
+          {/if}
+        {/if}
       </div>
     {/if}
   </div>
