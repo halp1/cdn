@@ -42,7 +42,7 @@
   let isSearchModalOpen = $state(false);
   let searchModalQuery = $state("");
 
-  type RightPanelMode = "upload-links" | "api-keys" | "stats" | "preview" | "deploy" | null;
+  type RightPanelMode = "upload-links" | "api-keys" | "stats" | "preview" | "deploy" | "backups" | null;
   let rightPanel = $state<RightPanelMode>(null);
 
   let viewMode = $state<"list" | "grid">("list");

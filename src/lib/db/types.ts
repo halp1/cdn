@@ -74,3 +74,22 @@ export interface SumRow {
 export interface CountRow {
   count: number;
 }
+
+export interface OAuthToken {
+  provider: string;
+  access_token: string;
+  refresh_token: string | null;
+  expires_at: number | null;
+  client_id: string | null;
+  client_secret: string | null;
+  redirect_uri: string | null;
+  folder_id: string | null;
+}
+
+export interface BackupRow {
+  id: number;
+  timestamp: number;
+  status: "success" | "failed";
+  error_message: string | null;
+  drive_file_id: string | null;
+}

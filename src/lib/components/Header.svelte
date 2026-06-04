@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { ChartNoAxesColumn } from "@lucide/svelte";
+  import { ChartNoAxesColumn, Cloud } from "@lucide/svelte";
   import { Search, Upload, Key, Link, Rocket, LogOut } from "@lucide/svelte";
   import { getStorageStatsQuery } from "$lib/api/r2.remote";
   import { formatFileSize } from "$lib/utils";
   import { tooltip } from "$lib/tooltip";
   import { getCurrentCommitQuery } from "$lib/api/deploy.remote";
+  import { onMount } from "svelte";
 
   interface Props {
     username: string;
@@ -22,6 +23,33 @@
   getCurrentCommitQuery().then(({ hash, message }) => {
     if (hash) deployTooltip = `Deploy — ${hash}${message ? ` ${message}` : ""}`;
   });
+
+  let lastBackupStatus = $state<{ status: "success" | "failed"; timestamp: number } | null>(null);
+
+  async function fetchLastBackup() {
+    try {
+      const res = await fetch("/api/backups");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.lastBackup) {
+          lastBackupStatus = {
+            status: data.lastBackup.status,
+            timestamp: data.lastBackup.timestamp
+          };
+        } else {
+          lastBackupStatus = null;
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  onMount(() => {
+    fetchLastBackup();
+    const interval = setInterval(fetchLastBackup, 30000);
+    return () => clearInterval(interval);
+  });
 </script>
 
 <header
@@ -38,6 +66,17 @@
     {:catch}
       <span class="font-mono text-xs text-muted">—</span>
     {/await}
+
+    {#if lastBackupStatus}
+      <span class="mx-1 font-mono text-xs text-muted">|</span>
+      <div
+        class="flex items-center gap-1.5 font-mono text-xs text-muted"
+        use:tooltip={`Last Backup: ${new Date(lastBackupStatus.timestamp * 1000).toLocaleString()}`}
+      >
+        <div class="h-2 w-2 rounded-full {lastBackupStatus.status === 'success' ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}"></div>
+        <span>Backup: {new Date(lastBackupStatus.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+      </div>
+    {/if}
   </div>
 
   <div class="search-wrap relative shrink-0">
@@ -92,6 +131,16 @@
       onclick={() => onTogglePanel("stats")}
     >
       <ChartNoAxesColumn size={14} />
+    </button>
+    <button
+      class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 transition-colors hover:bg-white/4 hover:text-text {rightPanel ===
+      'backups'
+        ? 'text-accent'
+        : 'text-muted'}"
+      use:tooltip={"Google Drive Backup"}
+      onclick={() => onTogglePanel("backups")}
+    >
+      <Cloud size={14} />
     </button>
     <div class="mx-1 h-5 w-px bg-border"></div>
     <button
