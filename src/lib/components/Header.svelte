@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { ChartNoAxesColumn, Cloud } from "@lucide/svelte";
+  import { ChartNoAxesColumn, Cloud, Menu, X as XIcon } from "@lucide/svelte";
   import { Search, Upload, Key, Link, Rocket, LogOut } from "@lucide/svelte";
   import { getStorageStatsQuery } from "$lib/api/r2.remote";
   import { formatFileSize } from "$lib/utils";
@@ -13,9 +13,12 @@
     onUpload: () => void;
     rightPanel: string;
     onTogglePanel: (panel: string) => void;
+    isMobile?: boolean;
+    isTreeOpen?: boolean;
+    onToggleTree?: () => void;
   }
 
-  let { username, onOpenSearchModal, onUpload, rightPanel, onTogglePanel }: Props = $props();
+  let { username, onOpenSearchModal, onUpload, rightPanel, onTogglePanel, isMobile = false, isTreeOpen = false, onToggleTree }: Props = $props();
 
   const statsPromise = getStorageStatsQuery();
 
@@ -55,45 +58,72 @@
 <header
   class="relative z-10 flex h-10 shrink-0 items-center gap-0 border-b border-border bg-surface px-3"
 >
-  <div class="flex min-w-0 flex-1 items-center gap-3">
+  {#if isMobile}
+    <button
+      class="mr-2 flex shrink-0 cursor-pointer items-center justify-center border-none bg-transparent p-1.5 text-muted transition-colors hover:bg-white/4 hover:text-text"
+      onclick={onToggleTree}
+      aria-label={isTreeOpen ? "Close file tree" : "Open file tree"}
+    >
+      {#if isTreeOpen}
+        <XIcon size={16} />
+      {:else}
+        <Menu size={16} />
+      {/if}
+    </button>
+  {/if}
+
+  <div class="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
     <span class="shrink-0 [font-family:var(--font-heading)] text-lg tracking-[0.08em] text-accent"
       >HALP/CDN</span
     >
-    {#await statsPromise then stats}
-      <span class="font-mono text-xs text-muted">{formatFileSize(stats.totalSize)}</span>
-      <span class="-mx-1 font-mono text-xs text-muted">/</span>
-      <span class="font-mono text-xs text-muted">{stats.objectCount.toLocaleString()} objects</span>
-    {:catch}
-      <span class="font-mono text-xs text-muted">—</span>
-    {/await}
+    {#if !isMobile}
+      {#await statsPromise then stats}
+        <span class="font-mono text-xs text-muted">{formatFileSize(stats.totalSize)}</span>
+        <span class="-mx-1 font-mono text-xs text-muted">/</span>
+        <span class="font-mono text-xs text-muted">{stats.objectCount.toLocaleString()} objects</span>
+      {:catch}
+        <span class="font-mono text-xs text-muted">—</span>
+      {/await}
 
-    {#if lastBackupStatus}
-      <span class="mx-1 font-mono text-xs text-muted">|</span>
-      <div
-        class="flex items-center gap-1.5 font-mono text-xs text-muted"
-        use:tooltip={`Last Backup: ${new Date(lastBackupStatus.timestamp * 1000).toLocaleString()}`}
-      >
-        <div class="h-2 w-2 rounded-full {lastBackupStatus.status === 'success' ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}"></div>
-        <span>Backup: {new Date(lastBackupStatus.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-      </div>
+      {#if lastBackupStatus}
+        <span class="mx-1 font-mono text-xs text-muted">|</span>
+        <div
+          class="flex items-center gap-1.5 font-mono text-xs text-muted"
+          use:tooltip={`Last Backup: ${new Date(lastBackupStatus.timestamp * 1000).toLocaleString()}`}
+        >
+          <div class="h-2 w-2 rounded-full {lastBackupStatus.status === 'success' ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}"></div>
+          <span>Backup: {new Date(lastBackupStatus.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+      {/if}
     {/if}
   </div>
 
-  <div class="search-wrap relative shrink-0">
-    <Search
-      size={13}
-      class="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted"
-    />
-    <input
-      type="text"
-      readonly
-      class="search-input w-70 cursor-pointer rounded-none border border-border bg-bg py-1.25 pr-2.5 pl-7.5 font-mono text-sm text-text ring-0 transition-[border-color,width] duration-200 outline-none placeholder:text-[#333] focus:border-accent"
-      placeholder="Search files... (Ctrl+K)"
-      onclick={onOpenSearchModal}
-    />
-  </div>
+  {#if !isMobile}
+    <div class="search-wrap relative shrink-0">
+      <Search
+        size={13}
+        class="pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2 text-muted"
+      />
+      <input
+        type="text"
+        readonly
+        class="search-input w-70 cursor-pointer rounded-none border border-border bg-bg py-1.25 pr-2.5 pl-7.5 font-mono text-sm text-text ring-0 transition-[border-color,width] duration-200 outline-none placeholder:text-[#333] focus:border-accent"
+        placeholder="Search files... (Ctrl+K)"
+        onclick={onOpenSearchModal}
+      />
+    </div>
+  {/if}
 
-  <div class="ml-3 flex shrink-0 items-center gap-0.5">
+  <div class="ml-auto flex shrink-0 items-center gap-0.5">
+    {#if isMobile}
+      <button
+        class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 text-muted transition-colors hover:bg-white/4 hover:text-text"
+        onclick={onOpenSearchModal}
+        aria-label="Search"
+      >
+        <Search size={14} />
+      </button>
+    {/if}
     <button
       class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 text-muted transition-colors hover:bg-white/4 hover:text-text"
       use:tooltip={"Upload"}

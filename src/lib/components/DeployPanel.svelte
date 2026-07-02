@@ -6,9 +6,10 @@
     onClose: () => void;
     width: number;
     onResize: (w: number) => void;
+    isMobile?: boolean;
   }
 
-  let { onClose, width, onResize }: Props = $props();
+  let { onClose, width, onResize, isMobile = false }: Props = $props();
 
   let lines = $state<string[]>([]);
   let currentCommit = $state("");
@@ -84,19 +85,23 @@
 />
 
 <aside
-  class="relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-surface"
-  style="width: {width}px"
+  class="{isMobile
+    ? 'fixed inset-0 z-40 flex flex-col overflow-hidden bg-surface'
+    : 'relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-surface'}"
+  style="{isMobile ? '' : `width: ${width}px`}"
 >
-  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <!-- svelte-ignore a11y_no_redundant_roles -->
-  <hr
-    class="absolute top-0 left-0 z-2 h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50"
-    onmousedown={onMouseDown}
-    role="separator"
-    aria-orientation="vertical"
-    aria-label="Resize panel"
-    tabindex="-1"
-  />
+  {#if !isMobile}
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <!-- svelte-ignore a11y_no_redundant_roles -->
+    <hr
+      class="absolute top-0 left-0 z-2 h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50"
+      onmousedown={onMouseDown}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize panel"
+      tabindex="-1"
+    />
+  {/if}
 
   <div class="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
     <span class="flex-1 text-xs tracking-[0.16em] text-muted uppercase">Deploy</span>
