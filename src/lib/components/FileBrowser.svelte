@@ -69,6 +69,13 @@
   let rightRatio = $state(0.5);
   const rightWidth = $derived(Math.max(220, Math.round((windowWidth - treeWidth) * rightRatio)));
 
+  const isMobile = $derived(windowWidth < 768);
+  let isTreeOpen = $state(false);
+
+  $effect(() => {
+    if (!isMobile) isTreeOpen = false;
+  });
+
   let filesData = $state<{ objects: R2Object[]; prefix: string } | null>(null);
   let allObjectsData = $state<{ objects: R2Object[] } | null>(null);
   let uploadingFiles = $state(new SvelteMap<string, number>());
@@ -482,21 +489,41 @@
     onUpload={handleUpload}
     rightPanel={rightPanel ?? ""}
     onTogglePanel={handleTogglePanel}
+    {isMobile}
+    {isTreeOpen}
+    onToggleTree={() => (isTreeOpen = !isTreeOpen)}
   />
 
   <div class="flex min-h-0 flex-1 overflow-hidden">
+    {#if isMobile && isTreeOpen}
+      <div
+        class="fixed inset-0 z-30 bg-black/60"
+        role="button"
+        tabindex="-1"
+        aria-label="Close file tree"
+        onclick={() => (isTreeOpen = false)}
+        onkeydown={(e) => e.key === "Escape" && (isTreeOpen = false)}
+      ></div>
+    {/if}
+
     {#if allObjectsData === null}
-      <div class="w-55 shrink-0 border-r border-border bg-surface"></div>
+      {#if !isMobile}
+        <div class="w-55 shrink-0 border-r border-border bg-surface"></div>
+      {/if}
     {:else}
       <FileTree
         objects={allObjectsWithUploading}
         currentPath={path}
-        onNavigate={navigate}
+        onNavigate={(p) => {
+          navigate(p);
+          if (isMobile) isTreeOpen = false;
+        }}
         onPreview={(obj) => {
           handlePreview(obj as import("$lib/r2-server").R2Object);
           const lastSlash = obj.key.lastIndexOf("/");
           const forPath = lastSlash > 0 ? obj.key.slice(0, lastSlash + 1) : "";
           pendingSelect = { key: obj.key, forPath };
+          if (isMobile) isTreeOpen = false;
         }}
         onDropFiles={handleFileDrop}
         onDropMove={handleMoveToFolder}
@@ -510,6 +537,9 @@
         onResize={(w) => {
           treeWidth = w;
         }}
+        {isMobile}
+        isOpen={!isMobile || isTreeOpen}
+        onClose={() => (isTreeOpen = false)}
       />
     {/if}
 
@@ -616,7 +646,7 @@
               use:tooltip={"Delete selected"}
             >
               <Trash2 size={13} />
-              <span>Delete {selected.size}</span>
+              {#if !isMobile}<span>Delete {selected.size}</span>{/if}
             </button>
           {/if}
           <button
@@ -625,7 +655,7 @@
             use:tooltip={"New folder"}
           >
             <FolderPlus size={13} />
-            <span>New folder</span>
+            {#if !isMobile}<span>New folder</span>{/if}
           </button>
           <button
             class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-muted uppercase transition-[color,border-color,background] hover:border-muted hover:bg-white/3 hover:text-text"
@@ -633,7 +663,7 @@
             use:tooltip={"Upload"}
           >
             <Upload size={13} />
-            <span>Upload</span>
+            {#if !isMobile}<span>Upload</span>{/if}
           </button>
           <button
             class="flex cursor-pointer items-center gap-1.25 border border-border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-muted uppercase transition-[color,border-color,background] hover:border-muted hover:bg-white/3 hover:text-text"
@@ -642,10 +672,10 @@
           >
             {#if viewMode === "list"}
               <LayoutGrid size={13} />
-              <span>Tiled</span>
+              {#if !isMobile}<span>Tiled</span>{/if}
             {:else}
               <List size={13} />
-              <span>List</span>
+              {#if !isMobile}<span>List</span>{/if}
             {/if}
           </button>
         </div>
@@ -698,6 +728,7 @@
         onResize={(w) => {
           rightRatio = w / (windowWidth - treeWidth);
         }}
+        {isMobile}
       />
     {:else if rightPanel === "deploy"}
       <DeployPanel
@@ -708,35 +739,40 @@
         onResize={(w) => {
           rightRatio = w / (windowWidth - treeWidth);
         }}
+        {isMobile}
       />
     {:else if rightPanel === "preview"}
       <aside
-        class="relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-surface"
-        style="width: {rightWidth}px"
+        class="{isMobile
+          ? 'fixed inset-0 z-40 flex flex-col overflow-hidden bg-surface'
+          : 'relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-surface'}"
+        style="{isMobile ? '' : `width: ${rightWidth}px`}"
       >
-        <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-        <div
-          class="absolute top-0 left-0 z-2 h-full w-1 cursor-col-resize hover:bg-accent hover:opacity-50"
-          onmousedown={(e) => {
-            let sx = e.clientX,
-              sw = rightWidth;
-            const contentW = windowWidth - treeWidth;
-            const mm = (ev: MouseEvent) => {
-              const newW = Math.max(220, Math.min(contentW - 28, sw - (ev.clientX - sx)));
-              rightRatio = newW / contentW;
-            };
-            const mu = () => {
-              window.removeEventListener("mousemove", mm);
-              window.removeEventListener("mouseup", mu);
-            };
-            window.addEventListener("mousemove", mm);
-            window.addEventListener("mouseup", mu);
-            e.preventDefault();
-          }}
-          role="separator"
-          aria-orientation="vertical"
-          tabindex="-1"
-        ></div>
+        {#if !isMobile}
+          <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+          <div
+            class="absolute top-0 left-0 z-2 h-full w-1 cursor-col-resize hover:bg-accent hover:opacity-50"
+            onmousedown={(e) => {
+              let sx = e.clientX,
+                sw = rightWidth;
+              const contentW = windowWidth - treeWidth;
+              const mm = (ev: MouseEvent) => {
+                const newW = Math.max(220, Math.min(contentW - 28, sw - (ev.clientX - sx)));
+                rightRatio = newW / contentW;
+              };
+              const mu = () => {
+                window.removeEventListener("mousemove", mm);
+                window.removeEventListener("mouseup", mu);
+              };
+              window.addEventListener("mousemove", mm);
+              window.addEventListener("mouseup", mu);
+              e.preventDefault();
+            }}
+            role="separator"
+            aria-orientation="vertical"
+            tabindex="-1"
+          ></div>
+        {/if}
         <FileViewer
           obj={previewObj}
           onClose={() => {

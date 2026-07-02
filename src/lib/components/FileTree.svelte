@@ -39,6 +39,9 @@
     scrollToKey?: string | null;
     movingFiles?: Set<string>;
     movingTarget?: string | null;
+    isMobile?: boolean;
+    isOpen?: boolean;
+    onClose?: () => void;
   }
 
   let {
@@ -55,7 +58,10 @@
     uploadingFiles = undefined,
     scrollToKey = null,
     movingFiles = undefined,
-    movingTarget = null
+    movingTarget = null,
+    isMobile = false,
+    isOpen = true,
+    onClose
   }: Props = $props();
 
   let expanded = $state<SvelteSet<string>>(new SvelteSet());
@@ -325,11 +331,24 @@
 />
 
 <aside
-  class="relative flex shrink-0 flex-col overflow-hidden border-r border-border bg-surface"
-  style="width: {width}px"
+  class="{isMobile
+    ? 'fixed inset-y-0 left-0 z-40 flex flex-col overflow-hidden border-r border-border bg-surface transition-transform duration-300'
+    : 'relative flex shrink-0 flex-col overflow-hidden border-r border-border bg-surface'}"
+  style="{isMobile
+    ? `width: min(${width}px, 85vw); transform: translateX(${isOpen ? '0' : '-110%'})`
+    : `width: ${width}px`}"
 >
-  <div class="flex h-9 shrink-0 items-center border-b border-border px-3">
+  <div class="flex h-9 shrink-0 items-center justify-between border-b border-border px-3">
     <span class="text-xs tracking-[0.16em] text-muted uppercase">Files</span>
+    {#if isMobile && onClose}
+      <button
+        class="flex cursor-pointer items-center border-none bg-transparent p-1 text-muted transition-colors hover:text-text"
+        onclick={onClose}
+        aria-label="Close file tree"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    {/if}
   </div>
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -556,16 +575,18 @@
     {@render renderNodes(tree, 0)}
   </div>
 
-  <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
-  <!-- svelte-ignore a11y_no_redundant_roles -->
-  <hr
-    class="absolute top-0 right-0 h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50"
-    onmousedown={onMouseDown}
-    role="separator"
-    aria-orientation="vertical"
-    aria-label="Resize file tree"
-    tabindex="-1"
-  />
+  {#if !isMobile}
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <!-- svelte-ignore a11y_no_redundant_roles -->
+    <hr
+      class="absolute top-0 right-0 h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50"
+      onmousedown={onMouseDown}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label="Resize file tree"
+      tabindex="-1"
+    />
+  {/if}
 </aside>
 
 {#if contextMenu}
