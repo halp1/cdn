@@ -188,6 +188,11 @@
     }
   }
 
+  function handleReconnect() {
+    // GET redirects straight to Google using the credentials already in the DB.
+    window.location.href = "/api/auth/google";
+  }
+
   async function handleTriggerBackup() {
     triggeringBackup = true;
     try {
@@ -554,8 +559,34 @@
           <div class="flex justify-center p-4 text-muted"><RefreshCw size={12} class="spin" /></div>
         {:else if backupData}
           {#if !backupData.connected}
+            {#if backupData.configured}
+              <div class="flex flex-col gap-2.5 border border-amber-500/20 bg-amber-500/5 p-3">
+                <p class="text-xs tracking-[0.14em] text-amber-400 uppercase font-bold">
+                  Authorization Expired
+                </p>
+                {#if backupData.lastBackup?.status === "failed" && backupData.lastBackup.error_message}
+                  <p class="font-mono text-[11px] text-red-400 leading-relaxed break-words">
+                    {backupData.lastBackup.error_message}
+                  </p>
+                {:else}
+                  <p class="text-xs text-muted leading-relaxed">
+                    Google is no longer accepting the saved credentials. Re-authorize to resume
+                    automated backups.
+                  </p>
+                {/if}
+                <button
+                  class="mt-1 w-full cursor-pointer border-0 bg-accent py-2 font-mono text-xs font-medium tracking-[0.12em] text-bg uppercase transition-opacity hover:opacity-[0.88]"
+                  onclick={handleReconnect}
+                >
+                  Reconnect Google Drive
+                </button>
+              </div>
+            {/if}
+
             <div class="flex flex-col gap-2.5 border border-border bg-bg p-3">
-              <p class="text-xs tracking-[0.14em] text-muted uppercase font-bold">Connect Google Drive</p>
+              <p class="text-xs tracking-[0.14em] text-muted uppercase font-bold">
+                {backupData.configured ? "Update Credentials" : "Connect Google Drive"}
+              </p>
               <p class="text-xs text-muted leading-relaxed">
                 Configure your Google OAuth credentials to set up automated SQLite backups to Google Drive.
               </p>

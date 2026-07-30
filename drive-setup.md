@@ -9,6 +9,11 @@ To set up the Google Drive Backup, follow these simple steps:
    - Fill in your App name and developer contact email.
    - Under **Scopes**, click **Add or Remove Scopes**, and add the scope: `.../auth/drive.file` (this scope allows the app to upload/manage only its own backups safely).
    - Under **Test users**, add your own Google email address.
+   - **Important:** while the app's publishing status is **Testing**, Google expires refresh tokens
+     after **7 days**, and backups will start failing with `invalid_grant` until you reconnect. For
+     unattended backups, click **Publish App** on the OAuth consent screen to move it to
+     **In production**. Since the only scope used is the narrow `drive.file`, this does not require
+     Google verification, and refresh tokens then stay valid until you revoke them.
 5. Navigate to **APIs & Services** > **Credentials**:
    - Click **+ Create Credentials** > **OAuth client ID**.
    - Select **Web application** as the application type.
@@ -46,3 +51,19 @@ To set up the Google Drive Backup, follow these simple steps:
 - The new backup will appear in the **Backup History** list with its success status.
 - A **Green Status Dot** and "Backup: [time]" indicator will display in your top bar, showing the latest backup time.
 - Automated backups will now trigger silently in the background every **4 hours**.
+
+---
+
+### Troubleshooting: `invalid_grant`
+
+If a backup fails with `Failed to refresh access token: { "error": "invalid_grant" }`, Google has
+permanently rejected the stored refresh token. The panel drops to an **Authorization Expired** state
+with a **Reconnect Google Drive** button. Common causes:
+
+- **The app is still in "Testing" publishing status** — refresh tokens expire after 7 days. This is
+  the usual reason backups work for about a week and then break. Fix it permanently by publishing
+  the app (see Step 1).
+- **Access was revoked** at [myaccount.google.com/permissions](https://myaccount.google.com/permissions),
+  or the Google account password was changed.
+- **The Client ID or Client Secret was changed** after connecting — a refresh token is only valid
+  for the client it was issued to, so reconnecting is required.

@@ -35,11 +35,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
       throw error(400, "Missing required parameters");
     }
     const existing = statements.getOAuthToken.get("google");
+
+    // A refresh token is only valid for the client it was issued to. If the
+    // credentials changed, keeping the old token would fail with invalid_grant
+    // on every backup, so discard it and force a fresh authorization.
+    const sameClient =
+      existing?.client_id === client_id && existing?.client_secret === client_secret;
+
     statements.setOAuthToken.run(
       "google",
-      existing?.access_token || "",
-      existing?.refresh_token || null,
-      existing?.expires_at || null,
+      sameClient ? existing?.access_token || "" : "",
+      sameClient ? existing?.refresh_token || null : null,
+      sameClient ? existing?.expires_at || null : null,
       client_id,
       client_secret,
       redirect_uri,

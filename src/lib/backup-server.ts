@@ -2,6 +2,27 @@ import { statements } from "$lib/db";
 import { zipSync } from "fflate";
 import fs from "fs";
 
+/**
+ * Wipes the stored tokens but keeps the OAuth config (client id/secret/redirect/folder)
+ * so the UI drops back to the "not connected" state and the user can re-authorize
+ * without re-entering everything.
+ */
+export function clearGoogleTokens(): void {
+  const token = statements.getOAuthToken.get("google");
+  if (!token) return;
+
+  statements.setOAuthToken.run(
+    "google",
+    "",
+    null,
+    null,
+    token.client_id,
+    token.client_secret,
+    token.redirect_uri,
+    token.folder_id
+  );
+}
+
 export async function getValidAccessToken(): Promise<string> {
   const token = statements.getOAuthToken.get("google");
   if (!token || !token.access_token) {
@@ -32,6 +53,27 @@ export async function getValidAccessToken(): Promise<string> {
 
     if (!response.ok) {
       const errText = await response.text();
+      let errCode = "";
+      try {
+        errCode = JSON.parse(errText).error || "";
+      } catch {
+        // Non-JSON error body; fall through to the generic message below.
+      }
+
+      // invalid_grant means Google will never accept this refresh token again:
+      // it was revoked, the credentials it was issued for changed, or the app is
+      // still in "Testing" publishing status (those refresh tokens expire after 7
+      // days). Retrying is pointless, so drop it and ask for a fresh authorization.
+      if (errCode === "invalid_grant") {
+        clearGoogleTokens();
+        throw new Error(
+          "Google rejected the saved refresh token (invalid_grant). This happens when access " +
+            "was revoked, the OAuth credentials changed, or the Google Cloud app is still in " +
+            "'Testing' publishing status (refresh tokens expire after 7 days there). " +
+            "Reconnect Google Drive to authorize again."
+        );
+      }
+
       throw new Error(`Failed to refresh access token: ${errText}`);
     }
 

@@ -468,7 +468,7 @@
                 : "—"
               : formatFileSize(obj.size ?? 0)}
           </div>
-          <div class="flex items-center justify-end px-1.5 font-mono text-sm text-muted">
+          <div class="flex items-center justify-end px-1.5 font-mono text-sm text-muted whitespace-nowrap">
             {obj.isFolder ? formatDate(getFolderModified(obj.key)) : formatDate(obj.lastModified)}
           </div>
           <div class="flex items-center justify-center">

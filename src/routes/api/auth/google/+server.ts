@@ -13,9 +13,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
   }
 
   const existing = statements.getOAuthToken.get("google");
-  const access_token = existing?.access_token ?? "";
-  const refresh_token = existing?.refresh_token ?? null;
-  const expires_at = existing?.expires_at ?? null;
+
+  // Tokens are bound to the client they were issued for — drop them if the
+  // credentials changed rather than letting a stale refresh token linger.
+  const sameClient = existing?.client_id === client_id && existing?.client_secret === client_secret;
+  const access_token = sameClient ? (existing?.access_token ?? "") : "";
+  const refresh_token = sameClient ? (existing?.refresh_token ?? null) : null;
+  const expires_at = sameClient ? (existing?.expires_at ?? null) : null;
 
   statements.setOAuthToken.run(
     "google",
