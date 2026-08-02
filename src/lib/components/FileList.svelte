@@ -487,7 +487,9 @@
               />
             {/if}
           </div>
-          <div class="flex min-w-0 flex-col justify-center px-1.5 md:flex-row md:items-center">
+          <div
+            class="flex min-w-0 flex-col justify-center px-1.5 md:flex-row md:items-center md:justify-start"
+          >
             {#if renamingKey === obj.key}
               <input
                 bind:this={renameInputEl}
