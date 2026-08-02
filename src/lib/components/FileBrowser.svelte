@@ -1,7 +1,19 @@
 <script lang="ts">
   /* eslint-disable svelte/no-navigation-without-resolve */
   import { goto, invalidateAll } from "$app/navigation";
-  import { FolderPlus, Upload, Trash2, LayoutGrid, List } from "@lucide/svelte";
+  import {
+    FolderPlus,
+    Upload,
+    Trash2,
+    LayoutGrid,
+    List,
+    Plus,
+    X,
+    ChevronLeft,
+    CheckCheck,
+    Download,
+    ListChecks
+  } from "@lucide/svelte";
   import Header from "$lib/components/Header.svelte";
   import FileTree from "$lib/components/FileTree.svelte";
   import FileList from "$lib/components/FileList.svelte";
@@ -42,7 +54,14 @@
   let isSearchModalOpen = $state(false);
   let searchModalQuery = $state("");
 
-  type RightPanelMode = "upload-links" | "api-keys" | "stats" | "preview" | "deploy" | "backups" | null;
+  type RightPanelMode =
+    | "upload-links"
+    | "api-keys"
+    | "stats"
+    | "preview"
+    | "deploy"
+    | "backups"
+    | null;
   let rightPanel = $state<RightPanelMode>(null);
 
   let viewMode = $state<"list" | "grid">("list");
@@ -131,7 +150,40 @@
 
   let uploadInput = $state<HTMLInputElement | null>(null);
 
+  // --- Touch shell state -------------------------------------------------
+  // All three start closed/off, so the server and client agree on markup.
+  let drawerOpen = $state(false);
+  let selectMode = $state(false);
+  let fabOpen = $state(false);
+
+  const closeOverlays = () => {
+    drawerOpen = false;
+    fabOpen = false;
+  };
+
+  const exitSelectMode = () => {
+    selectMode = false;
+    selected = new Set();
+  };
+
+  // The breadcrumb scrolls horizontally on phones; keep the current folder
+  // (the tail) in view rather than the "root /" prefix.
+  let crumbEl = $state<HTMLElement | null>(null);
+  $effect(() => {
+    void path;
+    if (crumbEl) crumbEl.scrollLeft = crumbEl.scrollWidth;
+  });
+
+  const parentPath = $derived.by(() => {
+    if (!path) return null;
+    const trimmed = path.replace(/\/$/, "");
+    const idx = trimmed.lastIndexOf("/");
+    return idx === -1 ? "" : trimmed.slice(0, idx + 1);
+  });
+
   const navigate = (newPath: string) => {
+    closeOverlays();
+    if (selectMode) exitSelectMode();
     if (!newPath) {
       goto("/");
     } else {
@@ -154,8 +206,14 @@
   };
 
   const handlePreview = (obj: R2Object) => {
+    closeOverlays();
     previewObj = obj;
     rightPanel = "preview";
+  };
+
+  const closePanel = () => {
+    rightPanel = null;
+    previewObj = null;
   };
 
   const handleTogglePanel = (panel: string) => {
@@ -348,7 +406,7 @@
   let showNewFolderModal = $state(false);
 
   const isAnyModalOpen = $derived(
-    isSearchModalOpen || deleteModalKeys !== null || showNewFolderModal
+    isSearchModalOpen || deleteModalKeys !== null || showNewFolderModal || drawerOpen || fabOpen
   );
 
   const arrowNavigate = (dir: 1 | -1) => {
@@ -402,13 +460,20 @@
     {
       key: "Escape",
       action: () => {
-        if (rightPanel !== null) {
-          rightPanel = null;
-          previewObj = null;
-        }
+        // Unwind the touch shell one layer at a time, innermost first.
+        if (fabOpen) fabOpen = false;
+        else if (drawerOpen) drawerOpen = false;
+        else if (rightPanel !== null) closePanel();
+        else if (selectMode) exitSelectMode();
       }
     }
   ]);
+
+  const selectAllVisible = () => {
+    const keys = sortedFileItems.map((o) => o.key);
+    const allSelected = keys.length > 0 && keys.every((k) => selected.has(k));
+    selected = allSelected ? new SvelteSet() : new SvelteSet(keys);
+  };
 
   const handleNewFolder = () => {
     showNewFolderModal = true;
@@ -473,20 +538,25 @@
 
 <KeyboardManager {keybinds} {isAnyModalOpen} />
 
-<div class="relative z-1 flex h-screen flex-col overflow-hidden bg-bg">
+<div class="h-app relative z-1 flex flex-col overflow-hidden bg-bg">
   <Header
     {username}
     onOpenSearchModal={() => {
+      closeOverlays();
       isSearchModalOpen = true;
     }}
     onUpload={handleUpload}
+    onToggleDrawer={() => {
+      fabOpen = false;
+      drawerOpen = !drawerOpen;
+    }}
     rightPanel={rightPanel ?? ""}
     onTogglePanel={handleTogglePanel}
   />
 
   <div class="flex min-h-0 flex-1 overflow-hidden">
     {#if allObjectsData === null}
-      <div class="w-55 shrink-0 border-r border-border bg-surface"></div>
+      <div class="hidden w-55 shrink-0 border-r border-border bg-surface md:block"></div>
     {:else}
       <FileTree
         objects={allObjectsWithUploading}
@@ -510,23 +580,76 @@
         onResize={(w) => {
           treeWidth = w;
         }}
+        open={drawerOpen}
+        onClose={() => (drawerOpen = false)}
       />
     {/if}
 
     <main class="flex min-w-0 flex-1 flex-col overflow-hidden">
+      {#if selectMode}
+        <!-- Contextual bar: replaces the breadcrumb while picking files. -->
+        <div
+          class="app-chrome flex h-12 shrink-0 items-center gap-1 border-b border-border bg-surface px-1 md:hidden"
+        >
+          <button
+            class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border-none bg-transparent text-muted active:bg-white/6"
+            onclick={exitSelectMode}
+            aria-label="Exit selection"
+          >
+            <X size={19} />
+          </button>
+          <span class="flex-1 truncate font-mono text-sm text-text">{selected.size} selected</span>
+          <button
+            class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border-none bg-transparent text-muted active:bg-white/6"
+            onclick={selectAllVisible}
+            aria-label="Select all"
+          >
+            <CheckCheck size={19} />
+          </button>
+          <button
+            class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border-none bg-transparent text-muted active:bg-white/6 disabled:opacity-30"
+            onclick={() => handleDownload([...selected])}
+            disabled={selected.size === 0}
+            aria-label="Download selected"
+          >
+            <Download size={19} />
+          </button>
+          <button
+            class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border-none bg-transparent text-[#ff6b6b] active:bg-white/6 disabled:opacity-30"
+            onclick={() => handleDelete([...selected])}
+            disabled={selected.size === 0}
+            aria-label="Delete selected"
+          >
+            <Trash2 size={19} />
+          </button>
+        </div>
+      {/if}
+
       <div
-        class="relative flex h-9 shrink-0 items-center justify-between gap-2 border-b border-border px-3"
+        class="relative h-11 shrink-0 items-center justify-between gap-2 border-b border-border px-1 md:flex md:h-9 md:px-3 {selectMode
+          ? 'hidden'
+          : 'flex'}"
       >
+        {#if parentPath !== null}
+          <button
+            class="flex h-10 w-9 shrink-0 cursor-pointer items-center justify-center border-none bg-transparent text-muted active:bg-white/6 md:hidden"
+            onclick={() => navigate(parentPath)}
+            aria-label="Up one folder"
+          >
+            <ChevronLeft size={20} />
+          </button>
+        {/if}
         <nav
-          class="z-10 flex h-full min-w-0 flex-1 items-stretch bg-bg text-sm"
+          bind:this={crumbEl}
+          class="z-10 flex h-full min-w-0 flex-1 items-stretch overflow-x-auto bg-bg pl-1.5 text-sm [scrollbar-width:none] md:overflow-visible md:pl-0 [&::-webkit-scrollbar]:hidden"
           aria-label="Breadcrumb"
         >
           {#if breadcrumbs.length === 0}
-            <span class="flex items-center px-0.5 text-text">root</span>
+            <span class="flex shrink-0 items-center px-0.5 text-text">root</span>
           {:else}
             <a
               href="/"
-              class="flex items-center justify-center px-0.5 text-muted transition-colors hover:text-text {dragOverCrumb ===
+              class="flex shrink-0 items-center justify-center px-0.5 text-muted transition-colors hover:text-text {dragOverCrumb ===
               ''
                 ? 'bg-accent/10 text-accent ring-1 ring-accent'
                 : 'bg-bg'}"
@@ -557,19 +680,21 @@
               }}><span>root</span></a
             >
             {#each breadcrumbs as crumb, i (crumb.href)}
-              <div class="flex items-center justify-center bg-bg px-1 text-border select-none">
+              <div
+                class="flex shrink-0 items-center justify-center bg-bg px-1 text-border select-none"
+              >
                 <span>/</span>
               </div>
               {#if i === breadcrumbs.length - 1}
                 <div
-                  class="flex items-center justify-center bg-bg px-0.5 pr-3 whitespace-nowrap text-text"
+                  class="flex shrink-0 items-center justify-center bg-bg px-0.5 pr-3 whitespace-nowrap text-text"
                 >
                   <span>{crumb.label}</span>
                 </div>
               {:else}
                 <a
                   href={crumb.href}
-                  class="flex items-center justify-center px-0.5 whitespace-nowrap text-muted transition-colors hover:text-text {dragOverCrumb ===
+                  class="flex shrink-0 items-center justify-center px-0.5 whitespace-nowrap text-muted transition-colors hover:text-text {dragOverCrumb ===
                   crumb.targetPath
                     ? 'bg-accent/10 text-accent ring-1 ring-accent'
                     : 'bg-bg'}"
@@ -608,7 +733,31 @@
             {/each}
           {/if}
         </nav>
-        <div class="flex shrink-0 items-center gap-1">
+        <div class="flex shrink-0 items-center md:hidden">
+          <button
+            class="flex h-10 w-10 cursor-pointer items-center justify-center border-none bg-transparent text-muted active:bg-white/6"
+            onclick={toggleViewMode}
+            aria-label={viewMode === "list" ? "Tiled view" : "List view"}
+          >
+            {#if viewMode === "list"}
+              <LayoutGrid size={18} />
+            {:else}
+              <List size={18} />
+            {/if}
+          </button>
+          <button
+            class="flex h-10 w-10 cursor-pointer items-center justify-center border-none bg-transparent text-muted active:bg-white/6"
+            onclick={() => {
+              fabOpen = false;
+              selectMode = true;
+            }}
+            aria-label="Select files"
+          >
+            <ListChecks size={18} />
+          </button>
+        </div>
+
+        <div class="hidden shrink-0 items-center gap-1 md:flex">
           {#if selected.size > 0}
             <button
               class="flex cursor-pointer items-center gap-1.25 border border-[#ff6b6b]/40 bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] text-[#ff6b6b] uppercase transition-[color,border-color,background] hover:border-[#ff6b6b]"
@@ -683,17 +832,22 @@
               sortedFileItems = items;
             }}
             {viewMode}
+            {selectMode}
           />
         {/if}
       </div>
     </main>
 
+    {#if rightPanel}
+      <!-- svelte-ignore a11y_click_events_have_key_events -->
+      <!-- svelte-ignore a11y_no_static_element_interactions -->
+      <div class="fixed inset-0 z-55 bg-black/60 md:hidden" onclick={closePanel}></div>
+    {/if}
+
     {#if rightPanel && rightPanel !== "preview" && rightPanel !== "deploy"}
       <RightPanel
         panel={rightPanel}
-        onClose={() => {
-          rightPanel = null;
-        }}
+        onClose={closePanel}
         width={rightWidth}
         onResize={(w) => {
           rightRatio = w / (windowWidth - treeWidth);
@@ -701,9 +855,7 @@
       />
     {:else if rightPanel === "deploy"}
       <DeployPanel
-        onClose={() => {
-          rightPanel = null;
-        }}
+        onClose={closePanel}
         width={rightWidth}
         onResize={(w) => {
           rightRatio = w / (windowWidth - treeWidth);
@@ -711,12 +863,16 @@
       />
     {:else if rightPanel === "preview"}
       <aside
-        class="relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-surface"
-        style="width: {rightWidth}px"
+        class="fixed inset-x-0 bottom-0 z-60 flex h-[92dvh] shrink-0 animate-[sheetUp_0.22s_cubic-bezier(0.32,0.72,0,1)] flex-col overflow-hidden border-t border-border bg-surface pb-(--safe-bottom) md:relative md:inset-auto md:z-auto md:h-auto md:w-(--panel-w) md:animate-none md:border-t-0 md:border-l md:pb-0"
+        style="--panel-w: {rightWidth}px"
       >
+        <div class="flex shrink-0 justify-center pt-2.5 pb-1 md:hidden">
+          <div class="h-1 w-10 rounded-full bg-border"></div>
+        </div>
+
         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
         <div
-          class="absolute top-0 left-0 z-2 h-full w-1 cursor-col-resize hover:bg-accent hover:opacity-50"
+          class="absolute top-0 left-0 z-2 hidden h-full w-1 cursor-col-resize hover:bg-accent hover:opacity-50 md:block"
           onmousedown={(e) => {
             let sx = e.clientX,
               sw = rightWidth;
@@ -737,23 +893,68 @@
           aria-orientation="vertical"
           tabindex="-1"
         ></div>
-        <FileViewer
-          obj={previewObj}
-          onClose={() => {
-            rightPanel = null;
-            previewObj = null;
-          }}
-        />
+        <FileViewer obj={previewObj} onClose={closePanel} />
       </aside>
     {/if}
   </div>
 
-  <div class="flex h-6 shrink-0 items-center justify-end border-t border-border bg-surface px-3">
+  <div
+    class="hidden h-6 shrink-0 items-center justify-end border-t border-border bg-surface px-3 md:flex"
+  >
     <div class="text-xs tracking-[0.08em] text-muted">
       <span>{selectedCount} selected</span>
     </div>
   </div>
 </div>
+
+<!-- Floating action button. Touch-only; desktop keeps the toolbar buttons. -->
+{#if !selectMode}
+  {#if fabOpen}
+    <!-- svelte-ignore a11y_click_events_have_key_events -->
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+      class="fixed inset-0 z-40 animate-[backdropIn_0.15s_ease] bg-black/50 md:hidden"
+      onclick={() => (fabOpen = false)}
+    ></div>
+  {/if}
+
+  <div
+    class="app-chrome pointer-events-none fixed right-4 bottom-4 z-45 flex flex-col items-end gap-2.5 md:hidden"
+    style="margin-bottom: var(--safe-bottom)"
+  >
+    {#if fabOpen}
+      <button
+        class="pointer-events-auto flex animate-[fadeUp_0.12s_ease_both] cursor-pointer items-center gap-2.5 border border-border bg-surface px-4 py-3 font-mono text-sm tracking-[0.06em] text-text uppercase shadow-lg active:bg-white/6"
+        onclick={() => {
+          fabOpen = false;
+          handleNewFolder();
+        }}
+      >
+        <FolderPlus size={16} />
+        New folder
+      </button>
+      <button
+        class="pointer-events-auto flex animate-[fadeUp_0.12s_ease_both] cursor-pointer items-center gap-2.5 border border-border bg-surface px-4 py-3 font-mono text-sm tracking-[0.06em] text-text uppercase shadow-lg active:bg-white/6"
+        style="animation-delay: 30ms"
+        onclick={() => {
+          fabOpen = false;
+          handleUpload();
+        }}
+      >
+        <Upload size={16} />
+        Upload
+      </button>
+    {/if}
+    <button
+      class="pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center border-none bg-accent text-bg shadow-[0_4px_16px_rgba(0,0,0,0.5)] active:opacity-85"
+      onclick={() => (fabOpen = !fabOpen)}
+      aria-label={fabOpen ? "Close actions" : "Add"}
+      aria-expanded={fabOpen}
+    >
+      <Plus size={28} class="transition-transform duration-150 {fabOpen ? 'rotate-45' : ''}" />
+    </button>
+  </div>
+{/if}
 
 <input
   bind:this={uploadInput}

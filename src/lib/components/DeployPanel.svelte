@@ -84,13 +84,13 @@
 />
 
 <aside
-  class="relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-surface"
-  style="width: {width}px"
+  class="fixed inset-x-0 bottom-0 z-60 flex h-[88dvh] shrink-0 animate-[sheetUp_0.22s_cubic-bezier(0.32,0.72,0,1)] flex-col overflow-hidden border-t border-border bg-surface pb-(--safe-bottom) md:relative md:inset-auto md:z-auto md:h-auto md:w-(--panel-w) md:animate-none md:border-t-0 md:border-l md:pb-0"
+  style="--panel-w: {width}px"
 >
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <!-- svelte-ignore a11y_no_redundant_roles -->
   <hr
-    class="absolute top-0 left-0 z-2 h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50"
+    class="absolute top-0 left-0 z-2 hidden h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50 md:block"
     onmousedown={onMouseDown}
     role="separator"
     aria-orientation="vertical"
@@ -98,7 +98,11 @@
     tabindex="-1"
   />
 
-  <div class="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
+  <div class="flex shrink-0 justify-center pt-2.5 pb-1 md:hidden">
+    <div class="h-1 w-10 rounded-full bg-border"></div>
+  </div>
+
+  <div class="flex h-11 shrink-0 items-center gap-2 border-b border-border px-3 md:h-9">
     <span class="flex-1 text-xs tracking-[0.16em] text-muted uppercase">Deploy</span>
     {#if status === "connecting" || status === "running"}
       <Loader size={11} class="spin text-accent" />

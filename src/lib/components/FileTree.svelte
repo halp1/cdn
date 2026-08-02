@@ -7,7 +7,8 @@
     Pencil,
     Trash2,
     Link2,
-    Eye
+    Eye,
+    X
   } from "@lucide/svelte";
   import FileIcon from "./FileIcon.svelte";
   import ContextMenu from "./ContextMenu.svelte";
@@ -16,6 +17,7 @@
   import { SvelteSet } from "svelte/reactivity";
   import { untrack } from "svelte";
   import { collectDroppedFiles, type DroppedFile } from "$lib/utils";
+  import { coarse } from "$lib/viewport.svelte";
 
   interface TreeNode {
     name: string;
@@ -39,6 +41,9 @@
     scrollToKey?: string | null;
     movingFiles?: Set<string>;
     movingTarget?: string | null;
+    /** Drawer visibility. Ignored at `md` and up, where the tree is docked. */
+    open?: boolean;
+    onClose?: () => void;
   }
 
   let {
@@ -55,7 +60,9 @@
     uploadingFiles = undefined,
     scrollToKey = null,
     movingFiles = undefined,
-    movingTarget = null
+    movingTarget = null,
+    open = false,
+    onClose = undefined
   }: Props = $props();
 
   let expanded = $state<SvelteSet<string>>(new SvelteSet());
@@ -324,18 +331,36 @@
   }}
 />
 
+{#if open}
+  <!-- svelte-ignore a11y_click_events_have_key_events -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    class="fixed inset-0 z-40 animate-[backdropIn_0.2s_ease] bg-black/60 md:hidden"
+    onclick={onClose}
+  ></div>
+{/if}
+
 <aside
-  class="relative flex shrink-0 flex-col overflow-hidden border-r border-border bg-surface"
-  style="width: {width}px"
+  class="app-chrome fixed inset-y-0 left-0 z-50 flex w-[82vw] max-w-80 shrink-0 flex-col overflow-hidden border-r border-border bg-surface pt-(--safe-top) pb-(--safe-bottom) transition-transform duration-200 ease-out [--row-h:40px] md:relative md:inset-auto md:z-auto md:w-(--tree-w) md:max-w-none md:translate-x-0 md:pt-0 md:pb-0 md:transition-none md:[--row-h:28px] {open
+    ? 'translate-x-0'
+    : '-translate-x-full'}"
+  style="--tree-w: {width}px"
 >
-  <div class="flex h-9 shrink-0 items-center border-b border-border px-3">
-    <span class="text-xs tracking-[0.16em] text-muted uppercase">Files</span>
+  <div class="flex h-11 shrink-0 items-center border-b border-border px-3 md:h-9">
+    <span class="flex-1 text-xs tracking-[0.16em] text-muted uppercase">Files</span>
+    <button
+      class="-mr-2 flex h-9 w-9 cursor-pointer items-center justify-center border-0 bg-transparent text-muted md:hidden"
+      onclick={onClose}
+      aria-label="Close folder tree"
+    >
+      <X size={18} />
+    </button>
   </div>
 
   <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     bind:this={scrollContainer}
-    class="flex-1 overflow-x-hidden overflow-y-auto pb-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
+    class="scroll-touch flex-1 overflow-x-hidden overflow-y-auto pb-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
     ondragover={(e) => {
       e.preventDefault();
       updateEdgeScroll(e.clientY);
@@ -364,7 +389,7 @@
     }}
   >
     <button
-      class="sticky top-0 z-20 flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none py-1 pr-2 pl-3 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors {dragOverPath ===
+      class="sticky top-0 z-20 flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none py-2.5 pr-2 pl-3 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors md:py-1 {dragOverPath ===
       ''
         ? 'bg-accent text-accent ring-1 ring-accent'
         : currentPath === ''
@@ -397,15 +422,15 @@
         >
           {#if node.isFolder}
             <button
-              class="sticky flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none py-1 pr-2 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors {isDragTarget
+              class="sticky flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none py-2.5 pr-2 text-left font-mono text-sm text-ellipsis whitespace-nowrap transition-colors md:py-1 {isDragTarget
                 ? 'bg-accent/8 text-accent'
                 : isActive
                   ? 'bg-surface text-accent'
                   : 'bg-surface text-muted hover:bg-white/3 hover:text-text'}"
-              style="padding-left: {depth * 12 + 8}px; z-index: {19 - depth}; top: {(depth + 1) *
-                28}px"
+              style="padding-left: {depth * 12 + 8}px; z-index: {19 - depth}; top: calc({depth +
+                1} * var(--row-h))"
               data-key={node.path}
-              draggable={renamingKey !== node.path}
+              draggable={renamingKey !== node.path && !coarse.current}
               ondragstart={(e) => {
                 e.stopPropagation();
                 e.dataTransfer!.effectAllowed = "move";
@@ -481,10 +506,10 @@
           {:else}
             {@const fileDropTarget = resolveDropFolder(node)}
             <button
-              class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-1 pr-2 text-left font-mono text-sm text-ellipsis whitespace-nowrap text-muted/70 transition-colors hover:bg-white/3 hover:text-text"
+              class="flex w-full cursor-pointer items-center gap-1.5 overflow-hidden border-none bg-none py-2.5 pr-2 text-left font-mono text-sm text-ellipsis whitespace-nowrap text-muted/70 transition-colors hover:bg-white/3 hover:text-text md:py-1"
               style="padding-left: {depth * 12 + 8}px"
               data-key={node.path}
-              draggable={renamingKey !== node.path}
+              draggable={renamingKey !== node.path && !coarse.current}
               ondragstart={(e) => {
                 e.stopPropagation();
                 e.dataTransfer!.effectAllowed = "move";
@@ -559,7 +584,7 @@
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <!-- svelte-ignore a11y_no_redundant_roles -->
   <hr
-    class="absolute top-0 right-0 h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50"
+    class="absolute top-0 right-0 hidden h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50 md:block"
     onmousedown={onMouseDown}
     role="separator"
     aria-orientation="vertical"
@@ -613,6 +638,7 @@
   <ContextMenu
     x={contextMenu.x}
     y={contextMenu.y}
+    title={node.name}
     items={treeItems}
     onClose={() => (contextMenu = null)}
   />

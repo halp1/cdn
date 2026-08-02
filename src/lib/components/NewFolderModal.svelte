@@ -39,11 +39,11 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <div
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+  class="fixed inset-0 z-80 flex items-center justify-center bg-black/60 p-4"
   onclick={handleBackdropClick}
 >
   <div
-    class="relative w-80 border border-border bg-surface p-6 before:absolute before:-top-px before:-right-px before:h-8 before:w-8 before:border-t-2 before:border-r-2 before:border-accent"
+    class="relative w-full max-w-80 border border-border bg-surface p-5 before:absolute before:-top-px before:-right-px before:h-8 before:w-8 before:border-t-2 before:border-r-2 before:border-accent md:p-6"
   >
     <div class="mb-4 flex items-center gap-2">
       <FolderPlus size={14} class="text-accent" />
@@ -67,14 +67,14 @@
     <div class="flex justify-end gap-2">
       <button
         type="button"
-        class="cursor-pointer border border-border bg-transparent px-4 py-1.5 font-mono text-sm tracking-[0.12em] text-muted uppercase transition-[color,border-color] hover:border-muted hover:text-text"
+        class="cursor-pointer border border-border bg-transparent px-4 py-3 font-mono text-sm tracking-[0.12em] text-muted uppercase transition-[color,border-color] hover:border-muted hover:text-text md:py-1.5"
         onclick={onCancel}
       >
         Cancel
       </button>
       <button
         type="button"
-        class="cursor-pointer border border-accent bg-accent px-4 py-1.5 font-mono text-sm font-medium tracking-[0.12em] text-bg uppercase transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+        class="cursor-pointer border border-accent bg-accent px-4 py-3 font-mono text-sm font-medium tracking-[0.12em] text-bg uppercase transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40 md:py-1.5"
         onclick={submit}
         disabled={!inputValue.trim()}
       >

@@ -68,12 +68,14 @@
   };
 </script>
 
-<div class="relative z-1 flex min-h-screen items-center justify-center p-6">
+<div
+  class="relative z-1 flex min-h-[100dvh] items-center justify-center p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))] md:p-6"
+>
   <div
-    class="card relative w-full max-w-105 animate-[fadeUp_0.5s_ease_both] border border-border bg-surface px-10 py-12"
+    class="card relative w-full max-w-105 animate-[fadeUp_0.5s_ease_both] border border-border bg-surface px-6 py-9 md:px-10 md:py-12"
   >
     <p class="mb-5 text-xs tracking-[0.18em] text-accent uppercase">Secure upload</p>
-    <h1 class="font-heading mb-6 text-5xl text-text">Upload file.</h1>
+    <h1 class="font-heading mb-6 text-4xl text-text md:text-5xl">Upload file.</h1>
 
     <div class="mb-7 flex flex-wrap gap-3 border-b border-border pb-5">
       <span class="flex flex-col gap-0.75">

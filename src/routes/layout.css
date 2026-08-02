@@ -23,6 +23,14 @@
   --muted: #666666;
   --input-bg: #111111;
   --font-heading: "Anta", sans-serif;
+
+  /* Safe-area insets — 0 everywhere except notched devices / standalone PWA. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+
+  color-scheme: dark;
 }
 
 .spin {
@@ -41,11 +49,61 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 body {
   background: var(--bg);
   color: var(--text);
   font-family: "DM Mono", monospace;
   min-height: 100vh;
+  min-height: 100dvh;
+  /* App-like: no rubber-band / pull-to-refresh bouncing the whole shell. */
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Fills the visible viewport, tracking mobile browser chrome as it hides. */
+.h-app {
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* Chrome (bars, drawers, sheets) should never look like selectable text on
+   touch, but file names and previewed content still must be selectable. */
+.app-chrome {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@media (pointer: coarse) {
+  /* Kills the 300ms tap delay and stray double-tap zoom on controls. */
+  button,
+  a,
+  [role="button"],
+  [role="row"] {
+    touch-action: manipulation;
+  }
+}
+
+.safe-top {
+  padding-top: var(--safe-top);
+}
+
+.safe-bottom {
+  padding-bottom: var(--safe-bottom);
+}
+
+.safe-x {
+  padding-left: var(--safe-left);
+  padding-right: var(--safe-right);
+}
+
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 body::before {
@@ -68,5 +126,33 @@ body::before {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes sheetUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

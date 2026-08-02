@@ -5,7 +5,7 @@ import type { Handle } from "@sveltejs/kit";
 import { startBackupScheduler } from "$lib/backup-server";
 
 // Start the Google Drive Backup scheduler
-startBackupScheduler();
+if (!import.meta.env.DEV) startBackupScheduler();
 
 const CORS_PATHS = ["/api", "/obj"];
 

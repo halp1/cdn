@@ -5,12 +5,16 @@
   import type { R2Object } from "$lib/r2-server";
   import { formatFileSize } from "$lib/utils";
   import { tooltip } from "$lib/tooltip";
+  import { mobile } from "$lib/viewport.svelte";
+
   interface Props {
     obj: R2Object | null;
     onClose: () => void;
   }
 
   let { obj, onClose }: Props = $props();
+
+  const iconSize = $derived(mobile.current ? 18 : 13);
 
   let loading = $state(false);
   let error = $state("");
@@ -98,7 +102,7 @@
       <span>Select a file to preview</span>
     </div>
   {:else}
-    <div class="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
+    <div class="flex h-11 shrink-0 items-center gap-2 border-b border-border px-3 md:h-9">
       <FileIcon filename={obj.key.split("/").pop() ?? obj.key} size={14} />
       <span class="flex-1 truncate text-sm text-text" use:tooltip={obj.key}
         >{obj.key.split("/").pop()}</span
@@ -111,23 +115,25 @@
           href={publicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          class="flex cursor-pointer items-center border-none bg-transparent p-1.25 text-muted no-underline transition-colors hover:text-text"
+          class="flex h-9 w-9 cursor-pointer items-center justify-center border-none bg-transparent text-muted no-underline transition-colors hover:text-text md:h-auto md:w-auto md:p-1.25"
+          aria-label="Open in new tab"
           use:tooltip={"Open in new tab"}
         >
-          <ExternalLink size={13} />
+          <ExternalLink size={iconSize} />
         </a>
         <button
-          class="flex cursor-pointer items-center border-none bg-transparent p-1.25 text-muted transition-colors hover:text-text"
+          class="-mr-2 flex h-9 w-9 cursor-pointer items-center justify-center border-none bg-transparent text-muted transition-colors hover:text-text md:mr-0 md:h-auto md:w-auto md:p-1.25"
           onclick={onClose}
+          aria-label="Close"
           use:tooltip={"Close"}
         >
-          <X size={13} />
+          <X size={iconSize} />
         </button>
       </div>
     </div>
 
     <div
-      class="relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
+      class="scroll-touch relative flex min-h-0 flex-1 flex-col items-center justify-center overflow-auto [&::-webkit-scrollbar]:h-1 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
     >
       {#if loading}
         <div class="flex h-37.5 flex-col items-center justify-center gap-3 text-sm text-muted">
@@ -143,7 +149,12 @@
         </div>
       {:else if fileType === "video"}
         <div class="flex w-full items-center justify-center p-4">
-          <video class="block bg-black" controls autoplay>
+          <video
+            class="block max-h-[70dvh] w-full max-w-full bg-black"
+            controls
+            autoplay
+            playsinline
+          >
             <source src={publicUrl} />
             <track kind="captions" />
           </video>
@@ -160,7 +171,8 @@
 					{textContent}
 				</pre>
       {:else if fileType === "pdf"}
-        <iframe src={publicUrl} class="h-full w-full max-w-3xl border" title={obj.key}></iframe>
+        <iframe src={publicUrl} class="h-full min-h-[65dvh] w-full max-w-3xl border" title={obj.key}
+        ></iframe>
       {:else if fileType === "docx"}
         <iframe
           src={`https://docs.google.com/gview?url=${encodeURIComponent(window.location.origin + publicUrl)}&embedded=true`}

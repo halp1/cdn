@@ -3,10 +3,13 @@
   import { notifications } from "$lib/notifications.svelte";
 </script>
 
-<div class="fixed right-4 bottom-4 z-50 flex flex-col items-end gap-2">
+<!-- On phones the toasts sit above the FAB and stretch to the screen width. -->
+<div
+  class="pointer-events-none fixed right-3 bottom-[calc(5.5rem+var(--safe-bottom))] left-3 z-70 flex flex-col items-stretch gap-2 md:right-4 md:bottom-4 md:left-auto md:items-end"
+>
   {#each notifications.toasts as toast (toast.id)}
     <div
-      class="toast flex max-w-sm min-w-72 items-start gap-3 border border-border bg-surface px-3.5 py-3 shadow-lg"
+      class="toast pointer-events-auto flex items-start gap-3 border border-border bg-surface px-3.5 py-3 shadow-lg md:max-w-sm md:min-w-72"
       class:toast--error={toast.type === "error"}
       class:toast--success={toast.type === "success"}
       class:toast--loading={toast.type === "loading"}
@@ -18,7 +21,7 @@
         {toast.message}
       </span>
       <button
-        class="mt-0.5 shrink-0 cursor-pointer border-none bg-transparent p-0 text-muted transition-colors hover:text-text"
+        class="-my-1 -mr-1 flex shrink-0 cursor-pointer items-center justify-center border-none bg-transparent p-2 text-muted transition-colors hover:text-text md:mt-0.5 md:mr-0 md:mb-0 md:p-0"
         onclick={() => notifications.dismiss(toast.id)}
         aria-label="Dismiss"
       >

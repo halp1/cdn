@@ -58,6 +58,13 @@ const show = (trigger: Element, text: string): HTMLDivElement => {
 };
 
 export const tooltip = (node: HTMLElement, text: string) => {
+  // Touch devices synthesise mouseenter/focus on tap, which leaves tooltips
+  // stranded on screen. Every tooltip here duplicates an aria-label, so
+  // skipping them entirely costs nothing.
+  if (typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches) {
+    return { update() {}, destroy() {} };
+  }
+
   let el: HTMLDivElement | null = null;
 
   const enter = () => {

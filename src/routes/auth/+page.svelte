@@ -17,14 +17,16 @@
   <title>HCDN | {mode === "login" ? "Login" : "Register"}</title>
 </svelte:head>
 
-<div class="relative z-1 flex min-h-screen items-center justify-center p-6">
+<div
+  class="relative z-1 flex min-h-[100dvh] items-center justify-center p-4 pt-[calc(1rem+var(--safe-top))] pb-[calc(1rem+var(--safe-bottom))] md:p-6"
+>
   <div
-    class="card relative w-full max-w-95 animate-[fadeUp_0.5s_ease_both] border border-border bg-surface px-10 py-12"
+    class="card relative w-full max-w-95 animate-[fadeUp_0.5s_ease_both] border border-border bg-surface px-6 py-9 md:px-10 md:py-12"
   >
     <p class="mb-5 text-xs tracking-[0.18em] text-accent uppercase">
       {mode === "login" ? "Welcome back" : "Create account"}
     </p>
-    <h1 class="font-heading mb-9 text-5xl leading-[1.1] text-text">
+    <h1 class="font-heading mb-9 text-4xl leading-[1.1] text-text md:text-5xl">
       {mode === "login" ? "Sign in." : "Register."}
     </h1>
 

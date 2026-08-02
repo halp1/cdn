@@ -32,12 +32,12 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-  class="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+  class="fixed inset-0 z-80 flex items-center justify-center bg-black/60 p-4"
   onclick={handleBackdropClick}
   onkeydown={handleKeydown}
 >
   <div
-    class="relative w-80 border border-border bg-surface p-6 before:absolute before:-top-px before:-right-px before:h-8 before:w-8 before:border-t-2 before:border-r-2 before:border-[#ff6b6b]"
+    class="relative w-full max-w-80 border border-border bg-surface p-5 before:absolute before:-top-px before:-right-px before:h-8 before:w-8 before:border-t-2 before:border-r-2 before:border-[#ff6b6b] md:p-6"
   >
     <div class="mb-3 flex items-center gap-2">
       <Trash2 size={14} class="text-[#ff6b6b]" />
@@ -52,7 +52,7 @@
     <div class="flex justify-end gap-2">
       <button
         type="button"
-        class="cursor-pointer border border-border bg-transparent px-4 py-1.5 font-mono text-sm tracking-[0.12em] text-muted uppercase transition-[color,border-color] hover:border-muted hover:text-text"
+        class="cursor-pointer border border-border bg-transparent px-4 py-3 font-mono text-sm tracking-[0.12em] text-muted uppercase transition-[color,border-color] hover:border-muted hover:text-text md:py-1.5"
         onclick={onCancel}
       >
         Cancel
@@ -60,7 +60,7 @@
       <button
         bind:this={focusEl}
         type="button"
-        class="cursor-pointer border border-[#ff6b6b] bg-[#ff6b6b] px-4 py-1.5 font-mono text-sm font-medium tracking-[0.12em] text-bg uppercase ring-0 outline-0 transition-opacity hover:opacity-80"
+        class="cursor-pointer border border-[#ff6b6b] bg-[#ff6b6b] px-4 py-3 font-mono text-sm font-medium tracking-[0.12em] text-bg uppercase ring-0 outline-0 transition-opacity hover:opacity-80 md:py-1.5"
         onclick={onConfirm}
       >
         Delete

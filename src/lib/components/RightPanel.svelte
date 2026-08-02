@@ -134,7 +134,8 @@
         backupData = await res.json();
         if (backupData) {
           clientIdInput = backupData.client_id;
-          redirectUriInput = backupData.redirect_uri || (window.location.origin + "/api/auth/google/callback");
+          redirectUriInput =
+            backupData.redirect_uri || window.location.origin + "/api/auth/google/callback";
           folderIdInput = backupData.folder_id;
         }
       }
@@ -239,13 +240,13 @@
 />
 
 <aside
-  class="relative flex shrink-0 flex-col overflow-hidden border-l border-border bg-surface"
-  style="width: {width}px"
+  class="fixed inset-x-0 bottom-0 z-60 flex h-[88dvh] shrink-0 animate-[sheetUp_0.22s_cubic-bezier(0.32,0.72,0,1)] flex-col overflow-hidden border-t border-border bg-surface pb-(--safe-bottom) md:relative md:inset-auto md:z-auto md:h-auto md:w-(--panel-w) md:animate-none md:border-t-0 md:border-l md:pb-0"
+  style="--panel-w: {width}px"
 >
   <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
   <!-- svelte-ignore a11y_no_redundant_roles -->
   <hr
-    class="absolute top-0 left-0 z-2 h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50"
+    class="absolute top-0 left-0 z-2 hidden h-full w-1 cursor-col-resize border-none bg-transparent transition-colors hover:bg-accent/50 md:block"
     onmousedown={onMouseDown}
     role="separator"
     aria-orientation="vertical"
@@ -253,16 +254,22 @@
     tabindex="-1"
   />
 
-  <div class="flex h-9 shrink-0 items-center gap-2 border-b border-border px-3">
+  <div class="flex shrink-0 justify-center pt-2.5 pb-1 md:hidden">
+    <div class="h-1 w-10 rounded-full bg-border"></div>
+  </div>
+
+  <div class="flex h-11 shrink-0 items-center gap-2 border-b border-border px-3 md:h-9">
     <span class="flex-1 text-xs tracking-[0.16em] text-muted uppercase">{titles[panel]}</span>
     <button
-      class="flex cursor-pointer items-center border-0 bg-transparent p-1.25 text-muted transition-colors hover:text-text"
-      onclick={onClose}><X size={13} /></button
+      class="-mr-2 flex h-9 w-9 cursor-pointer items-center justify-center border-0 bg-transparent text-muted transition-colors hover:text-text md:mr-0 md:h-auto md:w-auto md:p-1.25"
+      onclick={onClose}
+      aria-label="Close"
+      ><X size={18} class="md:hidden" /><X size={13} class="hidden md:block" /></button
     >
   </div>
 
   <div
-    class="flex-1 overflow-y-auto p-3 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
+    class="scroll-touch flex-1 overflow-y-auto p-3 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
   >
     {#if panel === "upload-links"}
       <div class="flex flex-col gap-2">
@@ -285,7 +292,7 @@
                 >Upload path</label
               >
               <input
-                class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                class="w-full rounded-none border border-border bg-input-bg px-2.25 py-2.5 font-mono text-base text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent md:py-1.75 md:text-sm"
                 id="link-path"
                 bind:value={newLinkPath}
                 placeholder="path/to/folder/"
@@ -297,7 +304,7 @@
                   >Expires (hours)</label
                 >
                 <input
-                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-2.5 font-mono text-base text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent md:py-1.75 md:text-sm"
                   id="link-hours"
                   type="number"
                   bind:value={newLinkHours}
@@ -310,7 +317,7 @@
                   >Max uploads</label
                 >
                 <input
-                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-2.5 font-mono text-base text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent md:py-1.75 md:text-sm"
                   id="link-max"
                   type="number"
                   bind:value={newLinkMax}
@@ -423,7 +430,7 @@
                 >Key name</label
               >
               <input
-                class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                class="w-full rounded-none border border-border bg-input-bg px-2.25 py-2.5 font-mono text-base text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent md:py-1.75 md:text-sm"
                 id="key-name"
                 bind:value={newKeyName}
                 placeholder="my-integration"
@@ -453,7 +460,7 @@
               {#each newKeyPaths as _, i (i)}
                 <div class="mb-1 flex items-center gap-1">
                   <input
-                    class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                    class="w-full rounded-none border border-border bg-input-bg px-2.25 py-2.5 font-mono text-base text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent md:py-1.75 md:text-sm"
                     bind:value={newKeyPaths[i]}
                     placeholder="/folder"
                   />
@@ -561,15 +568,15 @@
           {#if !backupData.connected}
             {#if backupData.configured}
               <div class="flex flex-col gap-2.5 border border-amber-500/20 bg-amber-500/5 p-3">
-                <p class="text-xs tracking-[0.14em] text-amber-400 uppercase font-bold">
+                <p class="text-xs font-bold tracking-[0.14em] text-amber-400 uppercase">
                   Authorization Expired
                 </p>
                 {#if backupData.lastBackup?.status === "failed" && backupData.lastBackup.error_message}
-                  <p class="font-mono text-[11px] text-red-400 leading-relaxed break-words">
+                  <p class="font-mono text-[11px] leading-relaxed break-words text-red-400">
                     {backupData.lastBackup.error_message}
                   </p>
                 {:else}
-                  <p class="text-xs text-muted leading-relaxed">
+                  <p class="text-xs leading-relaxed text-muted">
                     Google is no longer accepting the saved credentials. Re-authorize to resume
                     automated backups.
                   </p>
@@ -584,17 +591,20 @@
             {/if}
 
             <div class="flex flex-col gap-2.5 border border-border bg-bg p-3">
-              <p class="text-xs tracking-[0.14em] text-muted uppercase font-bold">
+              <p class="text-xs font-bold tracking-[0.14em] text-muted uppercase">
                 {backupData.configured ? "Update Credentials" : "Connect Google Drive"}
               </p>
-              <p class="text-xs text-muted leading-relaxed">
-                Configure your Google OAuth credentials to set up automated SQLite backups to Google Drive.
+              <p class="text-xs leading-relaxed text-muted">
+                Configure your Google OAuth credentials to set up automated SQLite backups to Google
+                Drive.
               </p>
 
-              <div class="flex flex-col gap-1.5 mt-1">
-                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="client-id">Client ID</label>
+              <div class="mt-1 flex flex-col gap-1.5">
+                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="client-id"
+                  >Client ID</label
+                >
                 <input
-                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-2.5 font-mono text-base text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent md:py-1.75 md:text-sm"
                   id="client-id"
                   bind:value={clientIdInput}
                   placeholder="Google OAuth Client ID"
@@ -602,10 +612,12 @@
               </div>
 
               <div class="flex flex-col gap-1.5">
-                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="client-secret">Client Secret</label>
+                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="client-secret"
+                  >Client Secret</label
+                >
                 <input
                   type="password"
-                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-2.5 font-mono text-base text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent md:py-1.75 md:text-sm"
                   id="client-secret"
                   bind:value={clientSecretInput}
                   placeholder="••••••••••••"
@@ -613,18 +625,22 @@
               </div>
 
               <div class="flex flex-col gap-1.5">
-                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="redirect-uri">Redirect URI</label>
+                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="redirect-uri"
+                  >Redirect URI</label
+                >
                 <input
-                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-2.5 font-mono text-base text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent md:py-1.75 md:text-sm"
                   id="redirect-uri"
                   bind:value={redirectUriInput}
                 />
               </div>
 
               <div class="flex flex-col gap-1.5">
-                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="folder-id">Google Drive Folder ID (Optional)</label>
+                <label class="text-xs tracking-[0.14em] text-muted uppercase" for="folder-id"
+                  >Google Drive Folder ID (Optional)</label
+                >
                 <input
-                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-1.75 font-mono text-sm text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent"
+                  class="w-full rounded-none border border-border bg-input-bg px-2.25 py-2.5 font-mono text-base text-text transition-[border-color] outline-none placeholder:text-[#333] focus:border-accent md:py-1.75 md:text-sm"
                   id="folder-id"
                   bind:value={folderIdInput}
                   placeholder="Root if empty"
@@ -641,10 +657,12 @@
             </div>
           {:else}
             <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5">
+              <div
+                class="flex items-center justify-between border border-emerald-500/20 bg-emerald-500/5 px-3 py-2.5"
+              >
                 <div class="flex items-center gap-2">
-                  <div class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                  <span class="text-xs font-mono text-emerald-400">Connected</span>
+                  <div class="h-2 w-2 animate-pulse rounded-full bg-emerald-500"></div>
+                  <span class="font-mono text-xs text-emerald-400">Connected</span>
                 </div>
                 <button
                   class="cursor-pointer border border-red-500/30 bg-transparent px-2 py-0.5 font-mono text-[10px] tracking-wider text-red-400 uppercase transition-colors hover:bg-red-500/10"
@@ -655,8 +673,11 @@
               </div>
 
               {#if backupData.folder_id}
-                <div class="border border-border bg-bg/50 px-3 py-2 font-mono text-[11px] text-muted">
-                  <span class="uppercase">Folder ID:</span> <span class="text-text select-all">{backupData.folder_id}</span>
+                <div
+                  class="border border-border bg-bg/50 px-3 py-2 font-mono text-[11px] text-muted"
+                >
+                  <span class="uppercase">Folder ID:</span>
+                  <span class="text-text select-all">{backupData.folder_id}</span>
                 </div>
               {/if}
 
@@ -669,23 +690,38 @@
               </button>
 
               <div class="mt-2">
-                <p class="mb-2 text-[10px] tracking-widest text-muted uppercase font-bold">Backup History</p>
-                <div class="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-1">
+                <p class="mb-2 text-[10px] font-bold tracking-widest text-muted uppercase">
+                  Backup History
+                </p>
+                <div class="flex max-h-60 flex-col gap-1.5 overflow-y-auto pr-1">
                   {#each backupData.backups as backup (backup.id)}
-                    <div class="flex flex-col border border-border bg-bg/30 px-2.5 py-2 font-mono text-xs">
+                    <div
+                      class="flex flex-col border border-border bg-bg/30 px-2.5 py-2 font-mono text-xs"
+                    >
                       <div class="flex items-center justify-between">
-                        <span class="text-text">{new Date(backup.timestamp * 1000).toLocaleString()}</span>
-                        <span class="px-1 py-0.25 text-[10px] uppercase font-bold {backup.status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}">
+                        <span class="text-text"
+                          >{new Date(backup.timestamp * 1000).toLocaleString()}</span
+                        >
+                        <span
+                          class="px-1 py-0.25 text-[10px] font-bold uppercase {backup.status ===
+                          'success'
+                            ? 'border border-emerald-500/20 bg-emerald-500/10 text-emerald-400'
+                            : 'border border-red-500/20 bg-red-500/10 text-red-400'}"
+                        >
                           {backup.status}
                         </span>
                       </div>
                       {#if backup.error_message}
-                        <p class="mt-1 text-[11px] text-red-400 leading-tight border-t border-red-500/10 pt-1">
+                        <p
+                          class="mt-1 border-t border-red-500/10 pt-1 text-[11px] leading-tight text-red-400"
+                        >
                           {backup.error_message}
                         </p>
                       {/if}
                       {#if backup.drive_file_id}
-                        <span class="mt-1 text-[10px] text-muted overflow-hidden text-ellipsis whitespace-nowrap">
+                        <span
+                          class="mt-1 overflow-hidden text-[10px] text-ellipsis whitespace-nowrap text-muted"
+                        >
                           ID: {backup.drive_file_id}
                         </span>
                       {/if}

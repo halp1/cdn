@@ -10,7 +10,8 @@
     Pencil,
     Download,
     Lock,
-    Globe
+    Globe,
+    Check
   } from "@lucide/svelte";
   import FileIcon from "./FileIcon.svelte";
   import ContextMenu from "./ContextMenu.svelte";
@@ -21,6 +22,7 @@
   import type { R2Object } from "$lib/r2-server";
   import { SvelteMap } from "svelte/reactivity";
   import { tooltip } from "$lib/tooltip";
+  import { coarse, mobile } from "$lib/viewport.svelte";
 
   interface Props {
     objects: R2Object[];
@@ -44,6 +46,8 @@
     uploadingFiles?: Map<string, number>;
     movingFiles?: Set<string>;
     viewMode?: "list" | "grid";
+    /** Touch multi-select: rows show checkboxes and a tap toggles instead of opens. */
+    selectMode?: boolean;
   }
 
   let {
@@ -66,8 +70,11 @@
     previewKey = null,
     uploadingFiles = undefined,
     movingFiles = undefined,
-    viewMode = "list"
+    viewMode = "list",
+    selectMode = false
   }: Props = $props();
+
+  const iconSize = $derived(mobile.current ? 18 : 13);
 
   type SortKey = "name" | "size" | "modified";
   type SortDir = "asc" | "desc";
@@ -212,6 +219,18 @@
   };
 
   const handleRowClick = (e: MouseEvent, key: string) => {
+    // Touch multi-select: every tap is a checkbox toggle.
+    if (selectMode) {
+      lastAnchorKey = key;
+      onSelect([key], false);
+      return;
+    }
+    // Touch, normal mode: there is no double-click, so one tap opens.
+    if (coarse.current) {
+      const obj = sorted().find((o) => o.key === key);
+      if (obj) handleRowDblClick(obj);
+      return;
+    }
     if (e.shiftKey) {
       if (lastAnchorKey !== null) {
         const items = sorted();
@@ -334,9 +353,31 @@
     }
   }}
 >
+  <!-- Touch sort bar. The desktop column headers are far too wide for a phone,
+       so sorting gets its own compact row that works in both view modes. -->
+  <div
+    class="app-chrome flex h-9 shrink-0 items-center gap-1 border-b border-border bg-surface px-2 md:hidden"
+  >
+    <span class="flex-1 text-xs tracking-[0.14em] text-muted uppercase">Sort</span>
+    {#each [{ key: "name", label: "Name" }, { key: "size", label: "Size" }, { key: "modified", label: "Date" }] as const as opt (opt.key)}
+      <button
+        class="flex cursor-pointer items-center gap-1 border bg-transparent px-2 py-1 font-mono text-xs tracking-[0.06em] uppercase transition-colors {sortKey ===
+        opt.key
+          ? 'border-accent/50 text-accent'
+          : 'border-border text-muted'}"
+        onclick={() => cycleSort(opt.key)}
+      >
+        {opt.label}
+        {#if sortKey === opt.key}
+          <span class="text-[10px]">{sortDir === "asc" ? "↑" : "↓"}</span>
+        {/if}
+      </button>
+    {/each}
+  </div>
+
   {#if viewMode === "list"}
     <div
-      class="list-header grid h-7 shrink-0 border-b border-border bg-surface"
+      class="list-header hidden h-7 shrink-0 border-b border-border bg-surface md:grid"
       style="grid-template-columns: 28px 1fr 80px 110px 32px"
     >
       <div class="flex items-center px-1.5"></div>
@@ -365,15 +406,17 @@
     </div>
   {/if}
 
+  <!-- Extra bottom padding on phones keeps the last row clear of the FAB. -->
   <div
-    class="flex-1 overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
+    class="scroll-touch flex-1 overflow-y-auto pb-24 md:pb-0 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-thumb]:bg-border [&::-webkit-scrollbar-track]:bg-transparent"
   >
     {#if sorted().length === 0}
       <div
         class="flex h-50 flex-col items-center justify-center gap-3 text-sm tracking-widest text-border uppercase"
       >
         <Upload size={24} />
-        <span>Drop files here or click Upload</span>
+        <span class="px-6 text-center md:hidden">Empty folder — tap + to upload</span>
+        <span class="hidden md:inline">Drop files here or click Upload</span>
       </div>
     {:else if viewMode === "list"}
       {#each sorted() as obj, i (obj.key)}
@@ -384,7 +427,9 @@
         {@const isMoving = movingFiles?.has(obj.key) ?? false}
         <div
           data-key={obj.key}
-          class="group list-row relative grid h-7.5 cursor-pointer border-b border-border/50 ring-0 outline-0 transition-colors select-none {isUploading ||
+          class="group list-row relative grid h-13 cursor-pointer border-b border-border/50 ring-0 outline-0 transition-colors select-none md:h-7.5 {selectMode
+            ? 'grid-cols-[38px_34px_1fr_44px] md:grid-cols-[28px_34px_1fr_80px_110px_32px]'
+            : 'grid-cols-[40px_1fr_44px] md:grid-cols-[28px_1fr_80px_110px_32px]'} {isUploading ||
           isMoving
             ? ''
             : 'animate-[fadeUp_0.25s_ease_both]'} {isSelected
@@ -392,13 +437,11 @@
             : isOpen
               ? 'bg-[#6ab4f5]/6'
               : 'hover:bg-white/3'}"
-          style="grid-template-columns: 28px 1fr 80px 110px 32px; {!isUploading && !isMoving
-            ? `animation-delay: ${Math.min(i, 30) * 15}ms`
-            : ''}"
+          style={!isUploading && !isMoving ? `animation-delay: ${Math.min(i, 30) * 15}ms` : ""}
           onclick={(e) => (renamingKey === obj.key ? null : handleRowClick(e, obj.key))}
           ondblclick={() => (renamingKey === obj.key ? null : handleRowDblClick(obj))}
           oncontextmenu={(e) => handleContextMenu(e, obj.key)}
-          draggable={renamingKey !== obj.key && !isUploading && !isMoving}
+          draggable={renamingKey !== obj.key && !isUploading && !isMoving && !coarse.current}
           ondragstart={(e) => {
             if (renamingKey === obj.key) {
               e.preventDefault();
@@ -418,27 +461,38 @@
           tabindex="0"
           onkeydown={(e) => renamingKey !== obj.key && e.key === "Enter" && handleRowDblClick(obj)}
         >
+          {#if selectMode}
+            <div class="flex items-center justify-center">
+              <span
+                class="flex h-5 w-5 items-center justify-center border transition-colors {isSelected
+                  ? 'border-accent bg-accent text-bg'
+                  : 'border-muted text-transparent'}"
+              >
+                <Check size={13} strokeWidth={3} />
+              </span>
+            </div>
+          {/if}
           <div class="relative flex items-center pl-2">
             {#if isOpen}
               <span class="absolute inset-y-0 -left-2 w-0.5 bg-[#6ab4f5]"></span>
             {/if}
             {#if obj.isFolder}
-              <Folder size={13} class="text-[#e8c87a]" />
+              <Folder size={iconSize} class="text-[#e8c87a]" />
             {:else}
               <FileIcon
                 filename={renamingKey === obj.key
                   ? renameValue
                   : (pendingRenames.get(obj.key) ?? obj.key.split("/").pop() ?? obj.key)}
-                size={13}
+                size={iconSize}
               />
             {/if}
           </div>
-          <div class="flex min-w-0 items-center px-1.5">
+          <div class="flex min-w-0 flex-col justify-center px-1.5 md:flex-row md:items-center">
             {#if renamingKey === obj.key}
               <input
                 bind:this={renameInputEl}
                 bind:value={renameValue}
-                class="w-full border-0 border-b bg-transparent p-0 font-mono text-sm text-(--text) ring-0 outline-none {renameConflict
+                class="w-full border-0 border-b bg-transparent p-0 font-mono text-base text-(--text) ring-0 outline-none md:text-sm {renameConflict
                   ? 'border-[#ff6b6b]'
                   : 'border-(--accent)'}"
                 onclick={(e) => e.stopPropagation()}
@@ -457,10 +511,22 @@
                     ? 'text-[#6ab4f5]'
                     : 'text-text'}">{pendingRenames.get(obj.key) ?? getLabel(obj)}</span
               >
+              <!-- Size and date collapse into one secondary line on phones. -->
+              <span class="truncate font-mono text-[11px] text-muted md:hidden">
+                {obj.isFolder
+                  ? getFolderSize(obj.key) !== undefined
+                    ? formatFileSize(getFolderSize(obj.key)!)
+                    : "—"
+                  : formatFileSize(obj.size ?? 0)}
+                ·
+                {obj.isFolder
+                  ? formatDate(getFolderModified(obj.key))
+                  : formatDate(obj.lastModified)}
+              </span>
             {/if}
           </div>
           <div
-            class="flex items-center justify-end px-1.5 font-mono text-sm whitespace-nowrap text-muted"
+            class="hidden items-center justify-end px-1.5 font-mono text-sm whitespace-nowrap text-muted md:flex"
           >
             {obj.isFolder
               ? getFolderSize(obj.key) !== undefined
@@ -468,19 +534,22 @@
                 : "—"
               : formatFileSize(obj.size ?? 0)}
           </div>
-          <div class="flex items-center justify-end px-1.5 font-mono text-sm text-muted whitespace-nowrap">
+          <div
+            class="hidden items-center justify-end px-1.5 font-mono text-sm whitespace-nowrap text-muted md:flex"
+          >
             {obj.isFolder ? formatDate(getFolderModified(obj.key)) : formatDate(obj.lastModified)}
           </div>
           <div class="flex items-center justify-center">
             <button
-              class="row-action flex items-center border-none bg-none p-1 text-transparent transition-colors group-hover:text-muted hover:text-text!"
+              class="row-action flex h-11 w-11 items-center justify-center border-none bg-none text-muted transition-colors md:h-auto md:w-auto md:p-1 md:text-transparent md:group-hover:text-muted md:hover:text-text!"
               onclick={(e) => {
                 e.stopPropagation();
                 handleContextMenu(e, obj.key);
               }}
+              aria-label="More actions"
               use:tooltip={"More actions"}
             >
-              <Ellipsis size={12} />
+              <Ellipsis size={mobile.current ? 17 : 12} />
             </button>
           </div>
           {#if isUploading}
@@ -497,7 +566,9 @@
       {/each}
     {:else}
       <!-- Grid / Tiled view mode -->
-      <div class="grid grid-cols-[repeat(auto-fill,minmax(130px,1fr))] gap-4 p-4">
+      <div
+        class="grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-2.5 p-2.5 md:grid-cols-[repeat(auto-fill,minmax(130px,1fr))] md:gap-4 md:p-4"
+      >
         {#each sorted() as obj, i (obj.key)}
           {@const isSelected = selected.has(obj.key)}
           {@const isOpen = obj.key === previewKey}
@@ -518,7 +589,7 @@
             onclick={(e) => (renamingKey === obj.key ? null : handleRowClick(e, obj.key))}
             ondblclick={() => (renamingKey === obj.key ? null : handleRowDblClick(obj))}
             oncontextmenu={(e) => handleContextMenu(e, obj.key)}
-            draggable={renamingKey !== obj.key && !isUploading && !isMoving}
+            draggable={renamingKey !== obj.key && !isUploading && !isMoving && !coarse.current}
             ondragstart={(e) => {
               if (renamingKey === obj.key) {
                 e.preventDefault();
@@ -545,6 +616,16 @@
             >
               {#if isOpen}
                 <span class="absolute top-0 bottom-0 left-0 w-0.5 bg-[#6ab4f5]"></span>
+              {/if}
+
+              {#if selectMode}
+                <span
+                  class="absolute top-1.5 left-1.5 z-2 flex h-5 w-5 items-center justify-center border transition-colors {isSelected
+                    ? 'border-accent bg-accent text-bg'
+                    : 'border-muted bg-bg/70 text-transparent'}"
+                >
+                  <Check size={13} strokeWidth={3} />
+                </span>
               {/if}
 
               {#if obj.isFolder}
@@ -582,7 +663,7 @@
                   <input
                     bind:this={renameInputEl}
                     bind:value={renameValue}
-                    class="w-full border-0 border-b bg-transparent p-0 font-mono text-xs text-(--text) ring-0 outline-none {renameConflict
+                    class="w-full border-0 border-b bg-transparent p-0 font-mono text-base text-(--text) ring-0 outline-none md:text-xs {renameConflict
                       ? 'border-[#ff6b6b]'
                       : 'border-(--accent)'}"
                     onclick={(e) => e.stopPropagation()}
@@ -616,14 +697,15 @@
 
               <div class="flex shrink-0 items-center">
                 <button
-                  class="row-action flex items-center border-none bg-none p-1 text-transparent transition-colors group-hover:text-muted hover:text-text!"
+                  class="row-action flex h-9 w-8 items-center justify-center border-none bg-none text-muted transition-colors md:h-auto md:w-auto md:p-1 md:text-transparent md:group-hover:text-muted md:hover:text-text!"
                   onclick={(e) => {
                     e.stopPropagation();
                     handleContextMenu(e, obj.key);
                   }}
+                  aria-label="More actions"
                   use:tooltip={"More actions"}
                 >
-                  <Ellipsis size={12} />
+                  <Ellipsis size={mobile.current ? 16 : 12} />
                 </button>
               </div>
             </div>
@@ -722,6 +804,12 @@
 					]
 				: [])
 		]}
-    <ContextMenu x={contextMenu.x} y={contextMenu.y} items={fileItems} onClose={closeContext} />
+    <ContextMenu
+      x={contextMenu.x}
+      y={contextMenu.y}
+      title={selected.size > 1 ? `${selected.size} items` : getLabel(obj)}
+      items={fileItems}
+      onClose={closeContext}
+    />
   {/if}
 {/if}
