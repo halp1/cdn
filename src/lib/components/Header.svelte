@@ -71,8 +71,10 @@
   };
 </script>
 
-<header class="app-chrome relative z-10 shrink-0 border-b border-border bg-surface pt-(--safe-top)">
-  <div class="flex h-13 items-center gap-0 px-2 md:h-10 md:px-3">
+<header
+  class="titlebar app-chrome relative z-10 shrink-0 border-b border-border bg-surface pt-(--safe-top)"
+>
+  <div class="titlebar-row flex h-13 items-center gap-0 px-2 md:h-10 md:px-3">
     <button
       class="mr-1 -ml-1 flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center border-none bg-transparent text-muted transition-colors active:bg-white/6 md:hidden"
       onclick={onToggleDrawer}

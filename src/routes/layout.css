@@ -106,6 +106,40 @@ body {
   overscroll-behavior: contain;
 }
 
+/* --- Window Controls Overlay ------------------------------------------
+   When the installed desktop app runs in WCO mode the OS titlebar is gone
+   and the page paints all the way to the top of the window, with only the
+   close/minimise/maximise buttons floating above it. The app header then
+   has to double as the titlebar: drag the window, and keep its contents
+   clear of the buttons — which sit to the LEFT of the titlebar area on
+   macOS and to its RIGHT on Windows. `titlebar-area-*` describes exactly
+   the strip we are allowed to use, so the row is pinned to it rather than
+   being hand-tuned per platform. Nothing here applies outside WCO. */
+@media (display-mode: window-controls-overlay) {
+  .titlebar {
+    -webkit-app-region: drag;
+    app-region: drag;
+  }
+
+  /* Only the bar's empty space drags; its controls stay clickable. */
+  .titlebar button,
+  .titlebar a,
+  .titlebar input,
+  .titlebar form,
+  .titlebar [role="button"] {
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+
+  /* The header keeps its full-width background so the strip behind the
+     window buttons matches the bar; only the content row is inset. */
+  .titlebar-row {
+    margin-left: env(titlebar-area-x, 0px);
+    width: env(titlebar-area-width, 100%);
+    min-height: env(titlebar-area-height, 0px);
+  }
+}
+
 body::before {
   content: "";
   position: fixed;
