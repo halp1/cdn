@@ -37,18 +37,6 @@ if (globalThis.__db) {
   globalThis.__db = db;
 }
 
-// Safe migrations to add is_private columns to existing tables
-try {
-  db.exec("ALTER TABLE folders ADD COLUMN is_private INTEGER DEFAULT NULL;");
-} catch (_) {
-  // column already exists
-}
-try {
-  db.exec("ALTER TABLE files ADD COLUMN is_private INTEGER DEFAULT NULL;");
-} catch (_) {
-  // column already exists
-}
-
 db.exec(`
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -128,6 +116,20 @@ db.exec(`
 		drive_file_id TEXT
 	);
 `);
+
+// Adds is_private to databases created before the feature existed. Must run
+// AFTER the CREATE TABLE block: on a fresh database the tables don't exist yet,
+// and the failure would be swallowed below, leaving the column missing entirely.
+try {
+  db.exec("ALTER TABLE folders ADD COLUMN is_private INTEGER DEFAULT NULL;");
+} catch (_) {
+  // column already exists
+}
+try {
+  db.exec("ALTER TABLE files ADD COLUMN is_private INTEGER DEFAULT NULL;");
+} catch (_) {
+  // column already exists
+}
 
 export { db };
 
