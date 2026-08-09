@@ -1,10 +1,9 @@
 <script lang="ts">
   import { ChartNoAxesColumn, Cloud, Menu, MoreVertical } from "@lucide/svelte";
-  import { Search, Upload, Key, Link, Rocket, LogOut } from "@lucide/svelte";
+  import { Search, Upload, Key, Link, LogOut } from "@lucide/svelte";
   import { getStorageStatsQuery } from "$lib/api/r2.remote";
   import { formatFileSize } from "$lib/utils";
   import { tooltip } from "$lib/tooltip";
-  import { getCurrentCommitQuery } from "$lib/api/deploy.remote";
   import { onMount } from "svelte";
   import Sheet from "./Sheet.svelte";
 
@@ -21,11 +20,6 @@
     $props();
 
   const statsPromise = getStorageStatsQuery();
-
-  let deployTooltip = $state("Deploy");
-  getCurrentCommitQuery().then(({ hash, message }) => {
-    if (hash) deployTooltip = `Deploy — ${hash}${message ? ` ${message}` : ""}`;
-  });
 
   let lastBackupStatus = $state<{ status: "success" | "failed"; timestamp: number } | null>(null);
 
@@ -61,8 +55,7 @@
     { panel: "upload-links", icon: Link, label: "Upload links" },
     { panel: "api-keys", icon: Key, label: "API keys" },
     { panel: "stats", icon: ChartNoAxesColumn, label: "Storage stats" },
-    { panel: "backups", icon: Cloud, label: "Google Drive backup" },
-    { panel: "deploy", icon: Rocket, label: "Deploy" }
+    { panel: "backups", icon: Cloud, label: "Google Drive backup" }
   ];
 
   const openTool = (panel: string) => {
@@ -199,16 +192,6 @@
         <Cloud size={14} />
       </button>
       <div class="mx-1 h-5 w-px bg-border"></div>
-      <button
-        class="flex cursor-pointer items-center justify-center border-none bg-transparent p-1.5 transition-colors hover:bg-white/4 hover:text-[#f0a830] {rightPanel ===
-        'deploy'
-          ? 'text-[#f0a830]'
-          : 'text-muted'}"
-        use:tooltip={deployTooltip}
-        onclick={() => onTogglePanel("deploy")}
-      >
-        <Rocket size={14} />
-      </button>
       <form method="POST" action="/logout">
         <button
           type="submit"

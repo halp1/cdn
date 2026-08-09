@@ -21,7 +21,6 @@
   import RightPanel from "$lib/components/RightPanel.svelte";
   import NewFolderModal from "$lib/components/NewFolderModal.svelte";
   import DeleteModal from "$lib/components/DeleteModal.svelte";
-  import DeployPanel from "$lib/components/DeployPanel.svelte";
   import KeyboardManager, { type KeyBind } from "$lib/components/KeyboardManager.svelte";
   import FileSearchModal from "$lib/components/FileSearchModal.svelte";
   import {
@@ -54,14 +53,7 @@
   let isSearchModalOpen = $state(false);
   let searchModalQuery = $state("");
 
-  type RightPanelMode =
-    | "upload-links"
-    | "api-keys"
-    | "stats"
-    | "preview"
-    | "deploy"
-    | "backups"
-    | null;
+  type RightPanelMode = "upload-links" | "api-keys" | "stats" | "preview" | "backups" | null;
   let rightPanel = $state<RightPanelMode>(null);
 
   let viewMode = $state<"list" | "grid">("list");
@@ -844,17 +836,9 @@
       <div class="fixed inset-0 z-55 bg-black/60 md:hidden" onclick={closePanel}></div>
     {/if}
 
-    {#if rightPanel && rightPanel !== "preview" && rightPanel !== "deploy"}
+    {#if rightPanel && rightPanel !== "preview"}
       <RightPanel
         panel={rightPanel}
-        onClose={closePanel}
-        width={rightWidth}
-        onResize={(w) => {
-          rightRatio = w / (windowWidth - treeWidth);
-        }}
-      />
-    {:else if rightPanel === "deploy"}
-      <DeployPanel
         onClose={closePanel}
         width={rightWidth}
         onResize={(w) => {

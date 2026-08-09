@@ -20,7 +20,7 @@ declare global {
   var __db: Database.Database | undefined;
 }
 
-const DB_PATH = path.join(process.cwd(), "data", "app.db");
+export const DB_PATH = path.join(process.cwd(), "data", "app.db");
 
 const dataDir = path.dirname(DB_PATH);
 if (!fs.existsSync(dataDir)) {
@@ -128,6 +128,8 @@ db.exec(`
 		drive_file_id TEXT
 	);
 `);
+
+export { db };
 
 export interface Statements {
   getOAuthToken: Database.Statement<[string], OAuthToken | undefined>;

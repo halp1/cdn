@@ -1,6 +1,8 @@
-import { statements } from "$lib/db";
+import { statements, db, DB_PATH } from "$lib/db";
 import { zipSync } from "fflate";
 import fs from "fs";
+import os from "os";
+import path from "path";
 
 /**
  * Wipes the stored tokens but keeps the OAuth config (client id/secret/redirect/folder)
@@ -106,11 +108,23 @@ export async function runBackup(): Promise<string> {
     const tokenRecord = statements.getOAuthToken.get("google");
     const folder_id = tokenRecord?.folder_id || null;
 
-    if (!fs.existsSync("data/app.db")) {
-      throw new Error("Database file 'data/app.db' not found");
+    if (!fs.existsSync(DB_PATH)) {
+      throw new Error(`Database file '${DB_PATH}' not found`);
     }
 
-    const dbBuffer = fs.readFileSync("data/app.db");
+    // In WAL mode, writes since the last auto-checkpoint live in app.db-wal, so
+    // reading app.db directly loses them and can capture a torn image of a file
+    // the server is still writing. db.backup() produces a single consistent
+    // snapshot without blocking writers.
+    const snapshotPath = path.join(os.tmpdir(), `app-backup-${timestamp}.db`);
+    let dbBuffer: Buffer;
+    try {
+      await db.backup(snapshotPath);
+      dbBuffer = fs.readFileSync(snapshotPath);
+    } finally {
+      fs.rmSync(snapshotPath, { force: true });
+    }
+
     const zipContent = zipSync(
       {
         "app.db": new Uint8Array(dbBuffer)
