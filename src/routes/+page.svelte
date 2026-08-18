@@ -9,7 +9,7 @@
 </script>
 
 <svelte:head>
-  <title>HCDN | /</title>
+  <title>HALP/CDN | /</title>
 </svelte:head>
 
 <FileBrowser path="" username={data.user?.username ?? ""} />

@@ -2,7 +2,7 @@ import { randomBytes } from "crypto";
 import { statements } from "./db";
 import type { ApiKey, ApiKeyCreate, ApiKeyPermission, ApiKeyRow } from "./db/types";
 
-const API_KEY_PREFIX = "hcdn_";
+const API_KEY_PREFIX = "HALP/CDN_";
 const KEY_LENGTH = 32;
 
 const VALID_PERMISSIONS: ApiKeyPermission[] = ["read", "write", "delete", "list"];

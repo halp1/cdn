@@ -14,7 +14,7 @@
 </script>
 
 <svelte:head>
-  <title>HCDN | {mode === "login" ? "Login" : "Register"}</title>
+  <title>HALP/CDN | {mode === "login" ? "Login" : "Register"}</title>
 </svelte:head>
 
 <div

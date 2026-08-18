@@ -1,7 +1,7 @@
 {
   "id": "/",
   "name": "HALP/CDN",
-  "short_name": "HCDN",
+  "short_name": "HALP/CDN",
   "description": "Private CDN storage and file manager.",
   "start_url": "/",
   "scope": "/",

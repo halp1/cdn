@@ -1,6 +1,7 @@
 To set up the Google Drive Backup, follow these simple steps:
 
 ### Step 1: Create Google Cloud Credentials
+
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
 2. Create a new project (or select an existing one).
 3. In the sidebar, navigate to **APIs & Services** > **Library**. Search for **Google Drive API** and enable it.
@@ -21,13 +22,14 @@ To set up the Google Drive Backup, follow these simple steps:
      ```
      http://localhost:5173/api/auth/google/callback
      ```
-     *(If running in production, use `https://your-domain.com/api/auth/google/callback`)*.
+     _(If running in production, use `https://your-domain.com/api/auth/google/callback`)_.
 6. Click **Create** and copy your **Client ID** and **Client Secret**.
 
 ---
 
-### Step 2: Configure in HCDN UI
-1. Open the HCDN web interface and log in.
+### Step 2: Configure in HALP/CDN UI
+
+1. Open the HALP/CDN web interface and log in.
 2. In the top bar, click the **Cloud Icon** (Google Drive Backup button) next to the Storage Stats button. The backup panel will expand on the right side.
 3. Paste the credentials you retrieved from Google:
    - **Client ID**: Paste your Client ID.
@@ -39,13 +41,15 @@ To set up the Google Drive Backup, follow these simple steps:
 ---
 
 ### Step 3: Complete Google Authorization
+
 1. You will be redirected to Google's authentication page.
-2. Select your Google account and grant the app permission to access Google Drive (since the app is not verified by Google yet, you may need to click *Advanced* > *Go to your-app (unsafe)* to proceed).
-3. Once authorized, you will automatically be redirected back to HCDN.
+2. Select your Google account and grant the app permission to access Google Drive (since the app is not verified by Google yet, you may need to click _Advanced_ > _Go to your-app (unsafe)_ to proceed).
+3. Once authorized, you will automatically be redirected back to HALP/CDN.
 
 ---
 
 ### Step 4: Verify and Run Backups
+
 - You will see a green **Connected** badge in the Google Drive Backup panel.
 - Click **Backup Database Now** to run an immediate manual backup and test that everything works.
 - The new backup will appear in the **Backup History** list with its success status.
