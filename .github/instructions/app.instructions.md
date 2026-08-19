@@ -155,7 +155,7 @@ Global keyboard shortcuts are managed by `KeyboardManager.svelte`.
 - Make filenames unique when there's a collision (append counter or suffix)
 - Validate all API inputs with Valibot — reject at boundary, never trust client data
 - API key paths must be validated to prevent traversal
-- Passwords hashed with bcrypt before storage
+- Browser sessions come from HALP auth (OIDC). WebDAV uses a CDN API key as the Basic password.
 
 ## Design
 

@@ -1,11 +1,16 @@
-import { jwt } from "$lib/jwt";
-import { statements } from "$lib/db";
+import { getOidc } from "$lib/oidc-client";
 import { handleWebDAV } from "$lib/webdav/handler";
+import { seedWebDavKeyIfNeeded } from "$lib/api-keys";
 import type { Handle } from "@sveltejs/kit";
 import { startBackupScheduler } from "$lib/backup-server";
+import { building } from "$app/environment";
 
-// Start the Google Drive Backup scheduler
 if (!import.meta.env.DEV) startBackupScheduler();
+
+const seededKey = seedWebDavKeyIfNeeded();
+if (seededKey) {
+  console.log(`[cdn] seeded WebDAV API key (save this): ${seededKey}`);
+}
 
 const CORS_PATHS = ["/api", "/obj"];
 
@@ -27,18 +32,12 @@ export const handle: Handle = async ({ event, resolve }) => {
     return addCors(new Response(null, { status: 204 }));
   }
 
-  event.locals.user = null;
-  const token = event.cookies.get("token");
-  if (token) {
-    const user = jwt.verify(token);
-    if (user) {
-      const dbUser = statements.getUserByUsername.get(user.username);
-      if (dbUser) {
-        event.locals.user = user;
-      } else {
-        event.cookies.delete("token", { path: "/" });
-      }
-    } else {
+  if (building) {
+    event.locals.user = null;
+  } else {
+    const oidc = await getOidc();
+    event.locals.user = oidc.readSession(event);
+    if (!event.locals.user) {
       event.cookies.delete("token", { path: "/" });
     }
   }

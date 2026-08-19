@@ -1,6 +1,5 @@
-import bcrypt from "bcryptjs";
-import { statements } from "$lib/db";
-import type { User } from "$lib/db/types";
+import { getApiKey, validateApiKeyAccess } from "$lib/api-keys";
+import type { ApiKeyPermission } from "$lib/db/types";
 
 export const parseBasicAuth = (
   authHeader: string | null
@@ -21,13 +20,61 @@ export const parseBasicAuth = (
   };
 };
 
-export const authenticateBasic = async (authHeader: string | null): Promise<User | null> => {
+const extractApiKey = (creds: { username: string; password: string }): string => {
+  if (creds.password.startsWith("HALP/CDN_")) return creds.password;
+  if (creds.username.startsWith("HALP/CDN_")) return creds.username;
+  return creds.password;
+};
+
+const permissionsFor = (method: string): ApiKeyPermission[] => {
+  switch (method) {
+    case "GET":
+    case "HEAD":
+      return ["read"];
+    case "PROPFIND":
+      return ["list", "read"];
+    case "DELETE":
+      return ["delete"];
+    case "PUT":
+    case "MKCOL":
+    case "COPY":
+    case "MOVE":
+    case "LOCK":
+    case "UNLOCK":
+    case "PROPPATCH":
+      return ["write"];
+    default:
+      return [];
+  }
+};
+
+const pathAllowed = (key: string, permissions: ApiKeyPermission[], requestPath: string) =>
+  permissions.some((permission) => validateApiKeyAccess(key, permission, requestPath).valid);
+
+export const authenticateWebDav = (
+  authHeader: string | null,
+  method: string,
+  logicalPath: string,
+  destPath: string | null
+): { ok: true } | { ok: false; status: 401 | 403 } => {
   const creds = parseBasicAuth(authHeader);
-  if (!creds) return null;
-  const user = statements.getUserByUsername.get(creds.username);
-  if (!user) return null;
-  const valid = await bcrypt.compare(creds.password, user.password_hash);
-  return valid ? user : null;
+  if (!creds) return { ok: false, status: 401 };
+
+  const key = extractApiKey(creds);
+  if (!getApiKey(key)) return { ok: false, status: 401 };
+
+  const permissions = permissionsFor(method);
+  if (permissions.length === 0) return { ok: false, status: 403 };
+
+  const requestPath = logicalPath ? `/${logicalPath}` : "/";
+  if (!pathAllowed(key, permissions, requestPath)) return { ok: false, status: 403 };
+
+  if ((method === "MOVE" || method === "COPY") && destPath !== null) {
+    const dest = destPath ? `/${destPath}` : "/";
+    if (!pathAllowed(key, ["write"], dest)) return { ok: false, status: 403 };
+  }
+
+  return { ok: true };
 };
 
 export const unauthorizedResponse = (): Response =>

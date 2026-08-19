@@ -2,7 +2,6 @@ import Database from "better-sqlite3";
 import path from "path";
 import fs from "fs";
 import type {
-  User,
   Folder,
   OneTimeLink,
   ExpireTime,
@@ -38,12 +37,6 @@ if (globalThis.__db) {
 }
 
 db.exec(`
-	CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		username TEXT UNIQUE NOT NULL,
-		password_hash TEXT NOT NULL
-	);
-
 	CREATE TABLE IF NOT EXISTS folders (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		path TEXT UNIQUE NOT NULL,
@@ -77,7 +70,6 @@ db.exec(`
 		is_active INTEGER DEFAULT 1
 	);
 
-	CREATE INDEX IF NOT EXISTS idx_users_username ON users (username);
 	CREATE INDEX IF NOT EXISTS idx_folders_path ON folders (path);
 	CREATE INDEX IF NOT EXISTS idx_one_time_links_token ON one_time_links (token);
 	CREATE INDEX IF NOT EXISTS idx_one_time_links_expires_at ON one_time_links (expires_at);
@@ -117,6 +109,12 @@ db.exec(`
 	);
 `);
 
+try {
+  db.exec("DROP TABLE IF EXISTS users");
+} catch (_) {
+  // ignore
+}
+
 // Adds is_private to databases created before the feature existed. Must run
 // AFTER the CREATE TABLE block: on a fresh database the tables don't exist yet,
 // and the failure would be swallowed below, leaving the column missing entirely.
@@ -140,11 +138,6 @@ export interface Statements {
   createBackup: Database.Statement<[number, string, string | null, string | null], void>;
   getLastBackup: Database.Statement<[], BackupRow | undefined>;
   getBackups: Database.Statement<[], BackupRow>;
-
-  createUser: Database.Statement<[string, string], void>;
-  getUserById: Database.Statement<[number], User | undefined>;
-  getUserByUsername: Database.Statement<[string], User | undefined>;
-  getUserCount: Database.Statement<[], CountRow>;
 
   createFolder: Database.Statement<[string], void>;
   deleteFolder: Database.Statement<[string], void>;
@@ -198,13 +191,6 @@ export const statements = {
   ),
   getLastBackup: db.prepare<[], BackupRow>("SELECT * FROM backups ORDER BY timestamp DESC LIMIT 1"),
   getBackups: db.prepare<[], BackupRow>("SELECT * FROM backups ORDER BY timestamp DESC LIMIT 50"),
-
-  createUser: db.prepare<[string, string], void>(
-    "INSERT INTO users (username, password_hash) VALUES (?, ?)"
-  ),
-  getUserById: db.prepare<[number], User>("SELECT * FROM users WHERE id = ?"),
-  getUserByUsername: db.prepare<[string], User>("SELECT * FROM users WHERE username = ?"),
-  getUserCount: db.prepare<[], CountRow>("SELECT COUNT(*) as count FROM users"),
 
   createFolder: db.prepare<[string], void>("INSERT OR IGNORE INTO folders (path) VALUES (?)"),
   deleteFolder: db.prepare<[string], void>("DELETE FROM folders WHERE path = ?"),

@@ -1,9 +1,3 @@
-export interface User {
-  id: number;
-  username: string;
-  password_hash: string;
-}
-
 export interface Folder {
   id: number;
   path: string;

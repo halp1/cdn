@@ -15,15 +15,25 @@ COPY package.json bun.lock .npmrc ./
 RUN bun install --frozen-lockfile \
   && npm rebuild better-sqlite3
 
-# $env/static/private is inlined by vite at build time (jwt.ts, r2-server.ts,
+# $env/static/private is inlined by vite at build time (r2-server.ts,
 # webdav/r2.ts) — without these the build fails outright
-ARG JWT_SECRET
+ARG SESSION_SECRET
+ARG AUTH_ISSUER=https://auth.haelp.dev/api/auth
+ARG AUTH_DCR_TOKEN
+ARG AUTH_CLIENT_ID
+ARG AUTH_CLIENT_SECRET
+ARG AUTH_REDIRECT_URI=https://cdn.haelp.dev/auth/callback
 ARG R2_ACCOUNT_ID
 ARG R2_ACCESS_KEY_ID
 ARG R2_SECRET_ACCESS_KEY
 ARG R2_BUCKET_NAME
 ARG R2_S3_ENDPOINT
-ENV JWT_SECRET=$JWT_SECRET \
+ENV SESSION_SECRET=$SESSION_SECRET \
+  AUTH_ISSUER=$AUTH_ISSUER \
+  AUTH_DCR_TOKEN=$AUTH_DCR_TOKEN \
+  AUTH_CLIENT_ID=$AUTH_CLIENT_ID \
+  AUTH_CLIENT_SECRET=$AUTH_CLIENT_SECRET \
+  AUTH_REDIRECT_URI=$AUTH_REDIRECT_URI \
   R2_ACCOUNT_ID=$R2_ACCOUNT_ID \
   R2_ACCESS_KEY_ID=$R2_ACCESS_KEY_ID \
   R2_SECRET_ACCESS_KEY=$R2_SECRET_ACCESS_KEY \

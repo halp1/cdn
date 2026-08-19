@@ -92,3 +92,13 @@ export const validateApiKeyAccess = (
   statements.updateApiKeyLastUsed.run(apiKey.id);
   return { valid: true, apiKey };
 };
+
+export const seedWebDavKeyIfNeeded = (): string | null => {
+  if (getAllApiKeys().length > 0) return null;
+  const result = createApiKey({
+    name: "webdav",
+    permissions: ["read", "write", "delete", "list"],
+    scopedPaths: ["/"]
+  });
+  return result.key ?? null;
+};

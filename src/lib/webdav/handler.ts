@@ -1,5 +1,5 @@
-import { authenticateBasic, unauthorizedResponse } from "./auth";
-import { stripDavPrefix, toLogicalPath } from "./path";
+import { authenticateWebDav, unauthorizedResponse } from "./auth";
+import { parseDestinationHeader, stripDavPrefix, toLogicalPath } from "./path";
 import { handleOptions } from "./methods/options";
 import { handlePropfind } from "./methods/propfind";
 import { handleGet } from "./methods/get";
@@ -30,9 +30,6 @@ export const handleWebDAV = async (request: Request, url: URL): Promise<Response
     return addDavHeaders(handleOptions());
   }
 
-  const user = await authenticateBasic(request.headers.get("authorization"));
-  if (!user) return unauthorizedResponse();
-
   const davPath = stripDavPrefix(url.pathname);
   let decodedPath: string;
   try {
@@ -41,6 +38,24 @@ export const handleWebDAV = async (request: Request, url: URL): Promise<Response
     return new Response("Bad Request", { status: 400 });
   }
   const logicalPath = toLogicalPath(decodedPath);
+
+  const destHeader = request.headers.get("destination");
+  const destPath =
+    (method === "MOVE" || method === "COPY") && destHeader
+      ? parseDestinationHeader(destHeader, "")
+      : null;
+
+  const auth = authenticateWebDav(
+    request.headers.get("authorization"),
+    method,
+    logicalPath,
+    destPath
+  );
+  if (!auth.ok) {
+    return auth.status === 401
+      ? unauthorizedResponse()
+      : new Response("Forbidden", { status: 403 });
+  }
 
   let response: Response;
 
