@@ -46,7 +46,10 @@ RUN bun run build
 FROM node:22-bookworm-slim
 
 WORKDIR /app
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+  PROTOCOL_HEADER=x-forwarded-proto \
+  HOST_HEADER=host \
+  ORIGIN=https://cdn.haelp.dev
 
 COPY --from=build /app/build ./build
 COPY --from=build /app/node_modules ./node_modules
