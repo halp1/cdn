@@ -4,18 +4,20 @@ import { generateDownloadUrl } from "$lib/r2-server";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
-  const { path } = params;
+  let { path } = params;
   if (!path) error(400, "No path specified");
+	
+  path = decodeURIComponent(path);
 
   // Only enforce private mode for unauthenticated public requests
   if (!locals.user && isPathPrivate(path)) {
     error(404, "File not found");
   }
-
+	
   const file = statements.getFileByPath.get(path);
   if (!file) error(404, "File not found");
 
   const filename = path.split("/").pop() ?? path;
-  const url = await generateDownloadUrl(file.id, file.extension, filename);
+	const url = await generateDownloadUrl(file.id, file.extension, filename);
   redirect(302, url);
 };
