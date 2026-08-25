@@ -615,7 +615,7 @@
 						icon: Link2 as Component,
 						label: 'Copy link',
 						action: () =>
-							navigator.clipboard.writeText(window.location.origin + '/obj/' + node.path)
+							navigator.clipboard.writeText(window.location.origin + '/obj/' + encodeURIComponent(node.path))
 					},
 				]
 			: []),

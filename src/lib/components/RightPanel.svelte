@@ -24,7 +24,7 @@
 
   let copiedToken = $state("");
   const copyLink = async (token: string) => {
-    await navigator.clipboard.writeText(`${window.location.origin}/upload/${token}`);
+    await navigator.clipboard.writeText(`${window.location.origin}/upload/${encodeURIComponent(token)}`);
     copiedToken = token;
     setTimeout(() => {
       copiedToken = "";
@@ -413,7 +413,7 @@
               >
               <button
                 class="flex cursor-pointer items-center border-0 bg-transparent p-1.25 text-muted transition-colors hover:text-text"
-                onclick={() => navigator.clipboard.writeText(newKeyValue)}
+                onclick={() => navigator.clipboard.writeText(encodeURIComponent(newKeyValue))}
               >
                 <Copy size={12} />
               </button>
